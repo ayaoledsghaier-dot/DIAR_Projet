@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <!-- Zone Défilante Principale -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/btnContact"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- 1. En-tête : Flèche Retour avec l'image arrow_back -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_alignParentStart="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Retour"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/arrow_back"
+                    android:tint="#1E293B"
+                    tools:ignore="UseAppTint" />
+
+            </RelativeLayout>
+
+            <!-- 2. Photo de Profil + Nom + Pourcentage de Compatibilité -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/imgProfile"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/coloc"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+
+                <TextView
+                    android:id="@+id/tvName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Ahmed"
+                    android:textColor="#0F172A"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvMatchPercentage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="✿ 92% compatible"
+                    android:textColor="#00A86B"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- 3. Informations Clés (Université, Âge, Budget, Localisation) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:orientation="vertical">
+
+                <!-- Université + Âge -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:gravity="center"
+                        android:text="🏛"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/tvUniversiteAge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="ISITCOM  •  21 ans"
+                        android:textColor="#64748B"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <!-- Budget -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:gravity="center"
+                        android:text="💰"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/tvBudget"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="Budget : 300 - 350 DT"
+                        android:textColor="#64748B"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <!-- Localisation -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:gravity="center"
+                        android:text="📍"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/tvLocalisation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="Sahloul"
+                        android:textColor="#64748B"
+                        android:textSize="15sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 4. Section : Mode de vie -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="Mode de vie"
+                android:textColor="#0F172A"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- Badges Mode de vie (Chips) -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupModeDeVie"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp">
+
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Calme"
+                    android:textColor="#475569"
+                    app:chipBackgroundColor="#F1F5F9"
+                    app:chipCornerRadius="18dp"
+                    app:strokeWidth="0dp" />
+
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Non-fumeur"
+                    android:textColor="#475569"
+                    app:chipBackgroundColor="#F1F5F9"
+                    app:chipCornerRadius="18dp"
+                    app:strokeWidth="0dp" />
+
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Étudie beaucoup"
+                    android:textColor="#475569"
+                    app:chipBackgroundColor="#F1F5F9"
+                    app:chipCornerRadius="18dp"
+                    app:strokeWidth="0dp" />
+
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Heure du coucher : Tard"
+                    android:textColor="#475569"
+                    app:chipBackgroundColor="#F1F5F9"
+                    app:chipCornerRadius="18dp"
+                    app:strokeWidth="0dp" />
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- 5. Section : Préférences -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:text="Préférences"
+                android:textColor="#0F172A"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- Badges Préférences (Chips) -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupPreferences"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp">
+
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Colocataire(s) : 1"
+                    android:textColor="#475569"
+                    app:chipBackgroundColor="#F1F5F9"
+                    app:chipCornerRadius="18dp"
+                    app:strokeWidth="0dp" />
+
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Animaux : Non"
+                    android:textColor="#475569"
+                    app:chipBackgroundColor="#F1F5F9"
+                    app:chipCornerRadius="18dp"
+                    app:strokeWidth="0dp" />
+
+                <!-- Ajout de la partie Propreté dans les préférences -->
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:id="@+id/chipProprete"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Propreté : Très ordonné"
+                    android:textColor="#475569"
+                    app:chipBackgroundColor="#F1F5F9"
+                    app:chipCornerRadius="18dp"
+                    app:strokeWidth="0dp" />
+            </com.google.android.material.chip.ChipGroup>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 6. Bouton fixe "Contacter" en bas -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnContact"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp"
+        android:text="Contacter"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:backgroundTint="#00A86B"
+        app:cornerRadius="16dp" />
+
+</RelativeLayout>

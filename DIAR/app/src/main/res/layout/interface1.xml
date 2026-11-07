@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 1. Image de fond (Bâtiment/Campus) -->
+    <ImageView
+        android:id="@+id/imgBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/dar"
+        android:contentDescription="Image d'arrière-plan du campus" />
+
+    <!-- 2. Filtre Sombre / Overlay bleu nuit semi-transparent -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#A60F2038" />
+
+    <!-- 3. Contenu Centré (Logo, Titre, Sous-titre) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="32dp">
+
+        <!-- Icône Maison + Chapeau d'Université (Logo) -->
+        <ImageView
+            android:id="@+id/imgLogo"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/homeicon"
+            android:contentDescription="Logo de l'application" />
+
+        <!-- Nom de l'application -->
+        <TextView
+            android:id="@+id/tvAppName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="DIAR"
+            android:textColor="#FFFFFF"
+            android:textSize="40sp"
+            android:textStyle="bold" />
+
+        <!-- Slogan / Description -->
+        <TextView
+            android:id="@+id/tvSlogan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:text="Ton logement,\nton université, ta communauté"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <!-- 4. Indicator / Barre d'avancement personnalisée en bas -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="48dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <!-- Segment actif (Blanc) -->
+        <View
+            android:layout_width="40dp"
+            android:layout_height="5dp"
+            android:background="@drawable/bg_indicator_active" />
+
+        <!-- Segment inactif (Gris semi-transparent) -->
+        <View
+            android:layout_width="80dp"
+            android:layout_height="5dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_indicator_inactive" />
+
+    </LinearLayout>
+
+</RelativeLayout>
