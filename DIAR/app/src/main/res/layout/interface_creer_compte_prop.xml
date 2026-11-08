@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#FAFAFA"
     android:fillViewport="true"
-    tools:context=".Interfacecreercompteprop">
+    tools:context=".interface_creer_compte_proprietaire">
 
     <LinearLayout
         android:layout_width="match_parent"

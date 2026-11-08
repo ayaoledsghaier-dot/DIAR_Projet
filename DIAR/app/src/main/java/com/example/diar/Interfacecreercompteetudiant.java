@@ -158,7 +158,7 @@ public class Interfacecreercompteetudiant extends AppCompatActivity {
                 final String[] serverMessage = {""};
                 try {
                     // Correction de l'URL avec l'IP correcte et le port 8082
-                    URL url = new URL("http://192.168.1.132:8082/api/etudiants");
+                    URL url = new URL("http://192.168.1.132:8083/api/etudiants");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setRequestProperty("Content-Type", "application/json; utf-8");

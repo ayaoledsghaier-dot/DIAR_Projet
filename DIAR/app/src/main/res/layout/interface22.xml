@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F7F9FC">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        android:text="Mon profil"
+        android:textColor="#172B4D"
+        android:textSize="25sp"
+        android:textStyle="bold" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <ImageView
+                android:id="@+id/imgProfilProprietaire"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:src="@drawable/ic_person"
+                android:scaleType="centerCrop"
+                android:padding="22dp"
+                android:background="@drawable/bg_bottom_nav"
+                android:contentDescription="Photo de profil" />
+
+            <TextView
+                android:id="@+id/tvNomProfil"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Nom du propriétaire"
+                android:textColor="#172B4D"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Propriétaire DIAR"
+                android:textColor="#1B8A5A"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="18dp"
+                android:layout_marginTop="25dp"
+                android:background="@drawable/bg_bottom_nav">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Informations personnelles"
+                    android:textColor="#172B4D"
+                    android:textStyle="bold"
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="Nom complet"
+                    android:textColor="#64748B"
+                    android:textSize="12sp" />
+
+                <EditText
+                    android:id="@+id/edtNomProfil"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="Votre nom"
+                    android:singleLine="true"
+                    android:textColor="#172B4D"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Adresse email"
+                    android:textColor="#64748B"
+                    android:textSize="12sp" />
+
+                <EditText
+                    android:id="@+id/edtEmailProfil"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="Votre email"
+                    android:inputType="textEmailAddress"
+                    android:singleLine="true"
+                    android:textColor="#172B4D"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Téléphone"
+                    android:textColor="#64748B"
+                    android:textSize="12sp" />
+
+                <EditText
+                    android:id="@+id/edtTelephoneProfil"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="Votre numéro de téléphone"
+                    android:inputType="phone"
+                    android:singleLine="true"
+                    android:textColor="#172B4D"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnModifierProfil"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="20dp"
+                android:backgroundTint="#1B8A5A"
+                android:text="Enregistrer les modifications"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnDeconnexionProfil"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="#FEE2E2"
+                android:text="Déconnexion"
+                android:textColor="#DC2626" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <include
+        android:id="@+id/bottomNavigationProprietaire"
+        layout="@layout/interface_barre_proprietaire"
+        android:layout_width="match_parent"
+        android:layout_height="70dp" />
+
+</LinearLayout>

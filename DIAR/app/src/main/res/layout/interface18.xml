@@ -1,426 +1,83 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FAFAFA">
-
-    <!-- 5. Barre de Navigation Basse (Ancrée en bas pour le RelativeLayout) -->
-    <include
-        android:id="@+id/bottomNavigation"
-        layout="@layout/interface_barre_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_alignParentBottom="true" />
-
-    <!-- Contenu Défilant (S'arrête juste au-dessus de la barre de navigation) -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/bottomNavigation"
-        android:fillViewport="true">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <!-- 1. En-tête : Photo + Salutation (M. Kamel) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/imgOwnerProfile"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/propretaire"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Bonjour M. Kamel 👋"
-                        android:textColor="#0F172A"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Propriétaire"
-                        android:textColor="#64748B"
-                        android:textSize="13sp" />
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#F8FAFC">
+    <!--  Décor en haut à droite  -->
+    <ImageView android:layout_width="230dp" android:layout_height="230dp" android:layout_alignParentTop="true" android:layout_alignParentEnd="true" android:layout_marginTop="-100dp" android:layout_marginEnd="-80dp" android:importantForAccessibility="no" android:src="@drawable/bg_blob_green"/>
+    <!--  Contenu principal  -->
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:layout_above="@id/bottomNavigationProprietaire" android:fillViewport="true" android:scrollbars="none">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+            <!--  En-tête propriétaire  -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:gravity="center_vertical" android:orientation="horizontal">
+                <FrameLayout android:layout_width="68dp" android:layout_height="68dp">
+                    <com.google.android.material.imageview.ShapeableImageView android:id="@+id/imgOwnerProfile" android:layout_width="62dp" android:layout_height="62dp" android:background="@drawable/bg_profile_ring" android:contentDescription="Photo propriétaire" android:padding="2dp" android:scaleType="centerCrop" android:src="@drawable/propretaire" app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"/>
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="bottom|end" android:background="@drawable/bg_circle_green_dark" android:importantForAccessibility="no" android:padding="5dp" android:src="@drawable/ic_edit" app:tint="#FFFFFF"/>
+                </FrameLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:id="@+id/tvOwnerGreeting" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bonjour M. Ahmed 👋" android:textColor="#1E2A5A" android:textSize="21sp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Propriétaire" android:textColor="#6B7280" android:textSize="15sp"/>
                 </LinearLayout>
             </LinearLayout>
-
-            <!-- 2. Grille de Statistiques -->
-            <GridLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:columnCount="2"
-                android:rowCount="2">
-
-                <!-- Stat 1 : Mes annonces -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_rowWeight="1"
-                    android:layout_columnWeight="1"
-                    android:layout_margin="6dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#F1F5F9"
-                    app:strokeWidth="1dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="🏠"
-                                android:textSize="16sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:text="Mes annonces"
-                                android:textColor="#64748B"
-                                android:textSize="12sp" />
-                        </RelativeLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:text="4"
-                            android:textColor="#0F172A"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
+            <!--  Statistiques  -->
+            <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:columnCount="2" android:rowCount="2" android:useDefaultMargins="false">
+                <!--  Mes annonces  -->
+                <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="100dp" android:layout_columnWeight="1" android:layout_rowWeight="1" android:layout_margin="6dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="22dp" app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="12dp">
+                        <ImageView android:layout_width="52dp" android:layout_height="52dp" android:background="@drawable/bg_circle_green_light" android:importantForAccessibility="no" android:padding="13dp" android:src="@drawable/ic_home" app:tint="#1B8A5A"/>
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mes annonces" android:textColor="#4B5A78" android:textSize="13sp"/>
+                            <TextView android:id="@+id/tvListingsCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="4" android:textColor="#1E2A5A" android:textSize="28sp" android:textStyle="bold"/>
+                        </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-
-                <!-- Stat 2 : Vues -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_rowWeight="1"
-                    android:layout_columnWeight="1"
-                    android:layout_margin="6dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#F1F5F9"
-                    app:strokeWidth="1dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="👁"
-                                android:textSize="16sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:text="Vues"
-                                android:textColor="#64748B"
-                                android:textSize="12sp" />
-                        </RelativeLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:text="127"
-                            android:textColor="#0F172A"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
+                <!--  Vues  -->
+                <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="100dp" android:layout_columnWeight="1" android:layout_rowWeight="1" android:layout_margin="6dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="22dp" app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="12dp">
+                        <ImageView android:layout_width="52dp" android:layout_height="52dp" android:background="@drawable/bg_circle_blue_light" android:importantForAccessibility="no" android:padding="13dp" android:src="@drawable/ic_eye" app:tint="#1D3FBF"/>
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Vues" android:textColor="#4B5A78" android:textSize="13sp"/>
+                            <TextView android:id="@+id/tvViewsCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="127" android:textColor="#1E2A5A" android:textSize="28sp" android:textStyle="bold"/>
+                        </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-
-                <!-- Stat 3 : Demandes -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_rowWeight="1"
-                    android:layout_columnWeight="1"
-                    android:layout_margin="6dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#F1F5F9"
-                    app:strokeWidth="1dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="📥"
-                                android:textSize="16sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:text="Demandes"
-                                android:textColor="#64748B"
-                                android:textSize="12sp" />
-                        </RelativeLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:text="8"
-                            android:textColor="#0F172A"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
+                <!--  Demandes  -->
+                <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="100dp" android:layout_columnWeight="1" android:layout_rowWeight="1" android:layout_margin="6dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="22dp" app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="12dp">
+                        <ImageView android:layout_width="52dp" android:layout_height="52dp" android:background="@drawable/bg_circle_green_light" android:importantForAccessibility="no" android:padding="13dp" android:src="@drawable/ic_bell" app:tint="#1B8A5A"/>
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Demandes" android:textColor="#4B5A78" android:textSize="13sp"/>
+                            <TextView android:id="@+id/tvRequestsCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="8" android:textColor="#1E2A5A" android:textSize="28sp" android:textStyle="bold"/>
+                        </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-
-                <!-- Stat 4 : Visites -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_rowWeight="1"
-                    android:layout_columnWeight="1"
-                    android:layout_margin="6dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#F1F5F9"
-                    app:strokeWidth="1dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="📍"
-                                android:textSize="16sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:text="Visites"
-                                android:textColor="#64748B"
-                                android:textSize="12sp" />
-                        </RelativeLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:text="3"
-                            android:textColor="#0F172A"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
+                <!--  Visites  -->
+                <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="100dp" android:layout_columnWeight="1" android:layout_rowWeight="1" android:layout_margin="6dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="22dp" app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="12dp">
+                        <ImageView android:layout_width="52dp" android:layout_height="52dp" android:background="@drawable/bg_circle_purple_light" android:importantForAccessibility="no" android:padding="13dp" android:src="@drawable/ic_calendar" app:tint="#5B3FB5"/>
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Visites" android:textColor="#4B5A78" android:textSize="13sp"/>
+                            <TextView android:id="@+id/tvVisitsCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="3" android:textColor="#1E2A5A" android:textSize="28sp" android:textStyle="bold"/>
+                        </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-
             </GridLayout>
-
-            <!-- 3. Bouton "+ Ajouter une annonce" -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAddListing"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginTop="16dp"
-                android:text="+ Ajouter une annonce"
-                android:textAllCaps="false"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:backgroundTint="#00A86B"
-                app:cornerRadius="16dp" />
-
-            <!-- 4. Section : Mes logements -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:text="Mes logements"
-                android:textColor="#0F172A"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <!-- Carte Logement 1 : Appartement Sahloul -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="#F1F5F9"
-                app:strokeWidth="1dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="12dp">
-
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/imgProperty1"
-                        android:layout_width="75dp"
-                        android:layout_height="65dp"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/appart"
-                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerVertical="true"
-                        android:layout_marginStart="14dp"
-                        android:layout_toEndOf="@id/imgProperty1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Appartement Sahloul"
-                            android:textColor="#0F172A"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="● Disponible"
-                            android:textColor="#00A86B"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:text="›"
-                        android:textColor="#94A3B8"
-                        android:textSize="24sp" />
-                </RelativeLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Carte Logement 2 : Studio Khezema -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="#F1F5F9"
-                app:strokeWidth="1dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="12dp">
-
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/imgProperty2"
-                        android:layout_width="75dp"
-                        android:layout_height="65dp"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/khzamadar"
-                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerVertical="true"
-                        android:layout_marginStart="14dp"
-                        android:layout_toEndOf="@id/imgProperty2"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Studio Khezema"
-                            android:textColor="#0F172A"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="● Disponible"
-                            android:textColor="#00A86B"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:text="›"
-                        android:textColor="#94A3B8"
-                        android:textSize="24sp" />
-                </RelativeLayout>
-            </com.google.android.material.card.MaterialCardView>
-
+            <!--  Bouton ajouter annonce  -->
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnAddListing" android:layout_width="match_parent" android:layout_height="58dp" android:layout_marginTop="20dp" android:text="Ajouter une annonce" android:textAllCaps="false" android:textColor="#FFFFFF" android:textSize="17sp" android:textStyle="bold" app:backgroundTint="#1B8A5A" app:cornerRadius="29dp" app:elevation="4dp" app:icon="@drawable/ic_add" app:iconGravity="textStart" app:iconPadding="10dp" app:iconSize="24dp" app:iconTint="#FFFFFF"/>
+            <!--  Titre Mes logements  -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:gravity="center_vertical" android:orientation="horizontal">
+                <ImageView android:layout_width="28dp" android:layout_height="28dp" android:importantForAccessibility="no" android:src="@drawable/ic_home" app:tint="#1B8A5A"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:text="Mes logements" android:textColor="#1E2A5A" android:textSize="21sp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:drawableEnd="@drawable/ic_arrow_right" android:drawablePadding="6dp" android:drawableTint="#1B8A5A" android:gravity="center_vertical" android:text="Voir tout" android:textColor="#1B8A5A" android:textSize="15sp"/>
+            </LinearLayout>
+            <!--  Message aucune annonce  -->
+            <LinearLayout android:id="@+id/layoutEmptyListings" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:gravity="center" android:orientation="vertical" android:padding="24dp">
+                <ImageView android:layout_width="72dp" android:layout_height="72dp" android:background="@drawable/bg_circle_green_light" android:importantForAccessibility="no" android:padding="18dp" android:src="@drawable/ic_home" app:tint="#1B8A5A"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Aucun logement pour le moment" android:textColor="#4B5A78" android:textSize="15sp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Ajoutez votre premier logement." android:textColor="#94A3B8" android:textSize="13sp"/>
+            </LinearLayout>
+            <!--  Liste dynamique des annonces  -->
+            <LinearLayout android:id="@+id/layoutListings" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:orientation="vertical"/>
+            <!--  Espace en bas  -->
+            <View android:layout_width="match_parent" android:layout_height="16dp"/>
         </LinearLayout>
     </ScrollView>
-
+    <!--  Barre de navigation fixe  -->
+    <include android:id="@+id/bottomNavigationProprietaire" layout="@layout/interface_barre_proprietaire" android:layout_width="match_parent" android:layout_height="70dp" android:layout_alignParentBottom="true"/>
 </RelativeLayout>

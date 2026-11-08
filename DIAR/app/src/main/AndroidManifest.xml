@@ -1,86 +1,44 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Permission Internet indispensable -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-    <application
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.DIAR"
-        android:usesCleartextTraffic="true"
-        tools:targetApi="31">
-
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
-
-        <!-- C'est ICI qu'on met l'écran d'inscription en premier pour le tester -->
-        <activity
-            android:name=".Interfacecreercompteetudiant"
-            android:exported="true">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <!--  Internet et réseau  -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!--  GPS : autorisations de localisation  -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <application android:allowBackup="true" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="@xml/backup_rules" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/Theme.DIAR" android:usesCleartextTraffic="true">
+        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>
+        <activity android:name=".interface1" android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
-        <activity
-            android:name=".MainActivity1"
-            android:exported="false" />
-
-        <activity
-            android:name=".Interface4"
-            android:exported="false" />
-
-        <activity
-            android:name=".Interface7"
-            android:exported="false" />
-
-        <activity
-            android:name=".Interface9"
-            android:exported="false" />
-
-        <activity
-            android:name=".Interface11"
-            android:exported="false" />
-
-        <activity
-            android:name=".Interface14"
-            android:exported="false" />
-
-        <activity
-            android:name=".Interface17"
-            android:exported="false" />
-        <activity
-            android:name=".Interface5"
-            android:exported="false" />
-        <activity
-            android:name=".Interfaceverification"
-            android:exported="false" />
-
-        <activity
-            android:name=".Interface6"
-            android:exported="false" />
-
-        <activity
-            android:name=".Interfaceprofilecoloc"
-            android:exported="false" />
-        <activity
-            android:name=".Interface12"
-            android:exported="true" />
-        <activity
-            android:name=".Interface13"
-            android:exported="true" />
+        <activity android:name=".Interface3" android:exported="false"/>
+        <activity android:name=".MainActivity1" android:exported="false"/>
+        <activity android:name=".Interface4" android:exported="false"/>
+        <activity android:name=".Interface7" android:exported="false"/>
+        <activity android:name=".Interface9" android:exported="false"/>
+        <activity android:name=".Interface11" android:exported="false"/>
+        <activity android:name=".Interface14" android:exported="false"/>
+        <activity android:name=".Interface17" android:exported="false"/>
+        <activity android:name=".interface_creer_compte_proprietaire" android:exported="false"/>
+        <activity android:name=".AccueilProprietaire" android:exported="false"/>
+        <activity android:name=".AjouterAnnonce" android:exported="false"/>
+        <activity android:name=".CarteProp" android:exported="false"/>
+        <activity android:name=".DetailAnnonce" android:exported="false"/>
+        <activity android:name=".interface20" android:exported="false"/>
+        <activity android:name=".Interface21" android:exported="false"/>
+        <activity android:name=".ChatProprietaire" android:exported="false"/>
+        <activity android:name=".interface22" android:exported="false"/>
+        <activity android:name=".Interfacecreercompteetudiant" android:exported="false"/>
+        <activity android:name=".BaseActivity" android:exported="false"/>
+        <activity android:name=".Interface5" android:exported="false"/>
+        <activity android:name=".Interface6" android:exported="false"/>
+        <activity android:name=".Interface12" android:exported="false"/>
+        <activity android:name=".Interface13" android:exported="false"/>
+        <activity android:name=".Interfaceprofilecoloc" android:exported="false"/>
+        <activity android:name=".Interfaceverification" android:exported="false"/>
 
 
     </application>
-
 </manifest>

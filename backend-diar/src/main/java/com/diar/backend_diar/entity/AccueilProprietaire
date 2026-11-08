@@ -1,0 +1,73 @@
+
+package com.diar.backend_diar.entity;
+
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.imageview.ShapeableImageView;
+
+public class AccueilProprietaire extends AppCompatActivity {
+
+    private ShapeableImageView imgOwnerProfile;
+    private ActivityResultLauncher<Intent> photoPicker;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.interface_accueil_proprietaire);
+
+        imgOwnerProfile = findViewById(R.id.imgOwnerProfile);
+
+        TextView tvOwnerGreeting =
+                findViewById(R.id.tvOwnerGreeting);
+
+        String nom = getIntent().getStringExtra("nomProprietaire");
+
+        if (nom != null && !nom.trim().isEmpty()) {
+            tvOwnerGreeting.setText("Bonjour " + nom + " 👋");
+        } else {
+            tvOwnerGreeting.setText("Bonjour 👋");
+        }
+
+        ((TextView) findViewById(R.id.tvListingsCount)).setText("0");
+        ((TextView) findViewById(R.id.tvViewsCount)).setText("0");
+        ((TextView) findViewById(R.id.tvRequestsCount)).setText("0");
+        ((TextView) findViewById(R.id.tvVisitsCount)).setText("0");
+
+        photoPicker = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK
+                            && result.getData() != null) {
+
+                        Uri imageUri = result.getData().getData();
+
+                        if (imageUri != null) {
+                            imgOwnerProfile.setImageURI(imageUri);
+                        }
+                    }
+                }
+        );
+
+        imgOwnerProfile.setOnClickListener(v -> {
+            Toast.makeText(
+                    AccueilProprietaire.this,
+                    "Image cliquée",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+
+            photoPicker.launch(intent);
+        });
+    }
+}

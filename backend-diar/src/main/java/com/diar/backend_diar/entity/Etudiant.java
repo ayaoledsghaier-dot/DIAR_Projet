@@ -1,4 +1,4 @@
-package com.diar.backend_diar.entity;
+package com.diar.backend_diar.entity; 
 
 import jakarta.persistence.*;
 

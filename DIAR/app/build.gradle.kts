@@ -49,6 +49,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.android.volley:volley:1.2.1")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
 
     // 🖼️ Ajout de Glide pour le chargement des photos de profil depuis le serveur
     implementation("com.github.bumptech.glide:glide:4.16.0")
