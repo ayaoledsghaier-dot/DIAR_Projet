@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -13,13 +12,13 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- Barre supérieure (Bouton retour + Titre) -->
+        <!-- Barre supérieure -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="30dp">
 
             <ImageButton
                 android:id="@+id/btnBack"
@@ -39,46 +38,16 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Photo de profil avec icône appareil photo -->
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="28dp">
-
-            <ImageView
-                android:id="@+id/imageView"
-                android:layout_width="90dp"
-                android:layout_height="90dp"
-                android:scaleType="centerCrop"
-                app:srcCompat="@drawable/icon_camera_profil" />
-
-        </FrameLayout>
-
-        <!-- Champ : Nom complet -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        <!-- Texte introductif -->
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:hint="Nom complet"
-            app:boxCornerRadiusBottomEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxStrokeColor="#E2E8F0"
-            app:hintTextColor="#64748B">
+            android:text="Complétez votre profil pour trouver un logement adapté à vos besoins."
+            android:textColor="#64748B"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etNomComplet"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPersonName"
-                android:textColor="#1E293B"
-                android:textSize="15sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Champ : Genre / Sexe -->
+        <!-- Genre -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
@@ -97,12 +66,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none"
-                android:colorControlHighlight="@android:color/transparent"
                 android:textColor="#1E293B"
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Champ : Université -->
+        <!-- Université -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
@@ -125,9 +93,7 @@
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Champ : Faculté -->
-
-        <!-- Champ : Niveau d'étude -->
+        <!-- Niveau d'étude -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
@@ -150,22 +116,30 @@
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Champ : Budget maximal (DT/mois) -->
+        <!-- Faculté -->
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:hint="Budget maximal (DT/mois)"
+            android:layout_marginBottom="24dp"
+            android:hint="Faculté / Institut / École"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusTopStart="12dp"
-            app:boxStrokeColor="#E2E8F0"/>
+            app:boxStrokeColor="#0D9488"
+            app:hintTextColor="#0D9488">
 
-        <!-- Champ : Date d'emménagement -->
+            <AutoCompleteTextView
+                android:id="@+id/spinnerFaculte"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:textColor="#1E293B"
+                android:textSize="15sp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Bouton Suivant -->
+        <!-- Suivant -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSuivant"
             android:layout_width="match_parent"

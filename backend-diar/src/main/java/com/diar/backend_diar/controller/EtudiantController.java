@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.springframework.http.MediaType;
+import java.util.UUID;
+
 @SuppressWarnings("unused")
 @RestController
 @RequestMapping("/api/etudiants")
@@ -486,4 +489,77 @@ public class EtudiantController {
             return ResponseEntity.status(500).body(null);
         }
     }
+    // 7. Enregistrement de la photo de profil lors de l'inscription
+@PostMapping(value = "/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<?> enregistrerPhotoInscription(
+        @RequestParam("email") String email,
+        @RequestParam("photo") MultipartFile photo) {
+
+    try {
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Email obligatoire !");
+        }
+
+        if (photo == null || photo.isEmpty()) {
+            return ResponseEntity.badRequest().body("Photo obligatoire !");
+        }
+
+        if (photo.getSize() > 5 * 1024 * 1024) {
+            return ResponseEntity.badRequest()
+                    .body("Photo trop volumineuse (5 MB maximum).");
+        }
+
+        String contentType = photo.getContentType();
+        String extension;
+
+        if ("image/jpeg".equals(contentType)) {
+            extension = ".jpg";
+        } else if ("image/png".equals(contentType)) {
+            extension = ".png";
+        } else if ("image/webp".equals(contentType)) {
+            extension = ".webp";
+        } else {
+            return ResponseEntity.badRequest()
+                    .body("Format photo non accepté !");
+        }
+
+        String emailClean = email.trim();
+
+        Etudiant etudiant = etudiantRepository.findByEmail(emailClean);
+
+        if (etudiant == null) {
+            return ResponseEntity.status(404)
+                    .body("Étudiant introuvable !");
+        }
+
+        Path dossier = Paths.get("uploads", "etudiants");
+        Files.createDirectories(dossier);
+
+        String nomFichier = UUID.randomUUID().toString() + extension;
+
+        Path destination = dossier.resolve(nomFichier);
+
+        try (java.io.InputStream input = photo.getInputStream()) {
+            Files.copy(input, destination,
+                    StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        etudiant.setPhotoUrl("/uploads/etudiants/" + nomFichier);
+
+        etudiantRepository.save(etudiant);
+
+        Map<String, String> resultat = new HashMap<>();
+        resultat.put("message", "Photo enregistrée avec succès !");
+        resultat.put("photoUrl", etudiant.getPhotoUrl());
+
+        return ResponseEntity.ok(resultat);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+
+        return ResponseEntity.status(500)
+                .body("Erreur lors de l'enregistrement de la photo : "
+                        + e.getMessage());
+    }
+}
 }
