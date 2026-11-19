@@ -24,13 +24,15 @@ public class Interface3 extends AppCompatActivity {
 
     private static final String TAG = "CONNEXION";
 
-    // URL du Backend avec ADB Reverse
-    private static final String URL = "http://192.168.1.22:8083/api/proprietaires/connexion";
+    private static final String URL =
+            "http://192.168.1.22:8083/api/auth/connexion";
 
     private EditText etEmail;
     private EditText etPassword;
+
     private MaterialButton btnLogin;
     private MaterialButton btnRegister;
+
     private RequestQueue requestQueue;
 
     @Override
@@ -40,12 +42,13 @@ public class Interface3 extends AppCompatActivity {
 
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
+
         btnLogin = findViewById(R.id.btnLogin);
         btnRegister = findViewById(R.id.btnRegister);
 
         requestQueue = Volley.newRequestQueue(getApplicationContext());
 
-        // Bouton inscription
+        // Inscription propriétaire
         btnRegister.setOnClickListener(v -> {
             Intent intent = new Intent(
                     Interface3.this,
@@ -54,7 +57,7 @@ public class Interface3 extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Bouton connexion
+        // Connexion étudiant ou propriétaire
         btnLogin.setOnClickListener(v -> connecter());
     }
 
@@ -86,7 +89,7 @@ public class Interface3 extends AppCompatActivity {
 
             Toast.makeText(
                     this,
-                    "Erreur lors de la préparation des données.",
+                    "Erreur de préparation des données.",
                     Toast.LENGTH_LONG
             ).show();
 
@@ -99,35 +102,100 @@ public class Interface3 extends AppCompatActivity {
                 URL,
                 donnees,
 
-                // SUCCESS
+                // CONNEXION REUSSIE
                 response -> {
 
                     btnLogin.setEnabled(true);
 
                     Log.d(TAG, "Réponse API : " + response);
 
-                    String nom = response.optString("nom", "");
-                    String emailRetour = response.optString("email", email);
+                    String role = response.optString("role", "").trim();
+                    String nom = response.optString("nom", "").trim();
 
-                    Intent intent = new Intent(
-                            Interface3.this,
-                            AccueilProprietaire.class
-                    );
+                    String emailRetour =
+                            response.optString("email", email).trim();
 
-                    intent.putExtra("nomProprietaire", nom);
-                    intent.putExtra("emailProprietaire", emailRetour);
+                    Intent intent;
+
+                    // ==========================
+                    // ETUDIANT
+                    // ==========================
+                    if (role.equalsIgnoreCase("ETUDIANT")) {
+
+                        intent = new Intent(
+                                Interface3.this,
+                                Interface7.class
+                        );
+
+                        intent.putExtra("typeCompte", "ETUDIANT");
+                        intent.putExtra("nomEtudiant", nom);
+                        intent.putExtra("emailEtudiant", emailRetour);
+
+                        // Sauvegarder la session étudiant
+                        SessionManager sessionManager =
+                                new SessionManager(Interface3.this);
+
+                        sessionManager.sauvegarderSession(
+                                emailRetour,
+                                nom
+                        );
+
+                        Toast.makeText(
+                                this,
+                                "Bienvenue " + nom,
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+
+                    // ==========================
+                    // PROPRIETAIRE
+                    // ==========================
+                    else if (role.equalsIgnoreCase("PROPRIETAIRE")) {
+
+                        intent = new Intent(
+                                Interface3.this,
+                                AccueilProprietaire.class
+                        );
+
+                        intent.putExtra("typeCompte", "PROPRIETAIRE");
+                        intent.putExtra("nomProprietaire", nom);
+                        intent.putExtra("emailProprietaire", emailRetour);
+
+                        Toast.makeText(
+                                this,
+                                "Bienvenue " + nom,
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+
+                    // ==========================
+                    // TYPE INCONNU
+                    // ==========================
+                    else {
+
+                        Toast.makeText(
+                                this,
+                                "Type de compte inconnu : " + role,
+                                Toast.LENGTH_LONG
+                        ).show();
+
+                        Log.e(TAG, "Role inconnu : " + role);
+                        return;
+                    }
 
                     startActivity(intent);
                     finish();
                 },
 
-                // ERROR
+                // ERREUR
                 error -> {
 
                     btnLogin.setEnabled(true);
 
-                    int statusCode = error.networkResponse != null
-                            ? error.networkResponse.statusCode : -1;
+                    int statusCode =
+                            error.networkResponse != null
+                                    ? error.networkResponse.statusCode
+                                    : -1;
 
                     String details = "";
 
@@ -142,8 +210,7 @@ public class Interface3 extends AppCompatActivity {
 
                     Log.e(
                             TAG,
-                            "URL : " + URL
-                                    + " | HTTP : " + statusCode
+                            "HTTP : " + statusCode
                                     + " | Réponse : " + details,
                             error
                     );
@@ -153,14 +220,19 @@ public class Interface3 extends AppCompatActivity {
                     if (statusCode == 401) {
                         message = "Email ou mot de passe incorrect.";
 
+                    } else if (statusCode == 403) {
+                        message =
+                                "Votre compte étudiant n'est pas encore validé.";
+
                     } else if (statusCode == 400) {
-                        message = "Données incorrectes.";
+                        message = "Veuillez vérifier vos informations.";
 
                     } else if (statusCode == 404) {
                         message = "Route API introuvable.";
 
                     } else if (statusCode == -1) {
-                        message = "Connexion impossible. Vérifie le Backend et ADB Reverse.";
+                        message =
+                                "Connexion impossible. Vérifiez le Backend et le réseau.";
 
                     } else {
                         message = "Erreur serveur HTTP : " + statusCode;
@@ -183,11 +255,13 @@ public class Interface3 extends AppCompatActivity {
         );
 
         request.setTag(TAG);
+
         requestQueue.add(request);
     }
 
     @Override
     protected void onDestroy() {
+
         super.onDestroy();
 
         if (requestQueue != null) {

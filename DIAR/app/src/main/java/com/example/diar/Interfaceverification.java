@@ -208,11 +208,14 @@ public class Interfaceverification extends AppCompatActivity {
 
                         // Délai personnalisé de 2,5 secondes (2500 ms) avant redirection
                         handler.postDelayed(() -> {
-                            Intent intent = new Intent(Interfaceverification.this, Interface6.class);
-                            // Si vous avez besoin de passer l'email ou d'autres données à l'interface 6 :
-                            // intent.putExtra("USER_EMAIL", userEmail);
+                            Intent intent = new Intent(Interfaceverification.this, Interface3.class);
+
+// Effacer les anciennes pages
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                                    Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
                             startActivity(intent);
-                            finish(); // Ferme l'activité actuelle pour ne pas y revenir en faisant "Retour"
+                            finish();
                         }, 2500);
 
                     } else {

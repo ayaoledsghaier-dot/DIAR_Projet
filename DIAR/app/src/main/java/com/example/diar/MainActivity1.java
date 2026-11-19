@@ -1,7 +1,7 @@
-
 package com.example.diar;
 
 import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -17,7 +17,6 @@ public class MainActivity1 extends AppCompatActivity {
 
         setContentView(R.layout.interface_creer_compte_etudiant);
 
-        // Activer les clics de la barre de navigation
-        NavigationHelper.setup(this);
+        // Pas de Bottom Navigation dans la page de création de compte
     }
 }

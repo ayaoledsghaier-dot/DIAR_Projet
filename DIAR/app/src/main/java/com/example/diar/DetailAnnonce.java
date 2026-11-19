@@ -5,7 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
-import android.view.View;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -29,6 +29,8 @@ import org.osmdroid.views.overlay.Marker;
 
 public class DetailAnnonce extends AppCompatActivity {
 
+    private static final String TAG = "DIAR_OWNER";
+
     private static final String BASE_URL =
             "http://192.168.1.22:8083";
 
@@ -44,16 +46,25 @@ public class DetailAnnonce extends AppCompatActivity {
     private LinearLayout layoutPhotos;
     private MapView mapDetailAnnonce;
 
+    private String proprietaireEmail = "";
+    private String proprietaireNom = "";
+
+    private long idAnnonce = -1;
+
+    private String etudiantEmail = "";
+    private String etudiantNom = "";
+
+    private Button btnContacter;
+    private Button btnDemanderVisite;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.detail_annonce);
 
-        // Configuration de la carte
         Configuration.getInstance()
                 .setUserAgentValue(getPackageName());
 
-        // Récupération des vues XML
         imgDetailAnnonce = findViewById(R.id.imgDetailAnnonce);
 
         tvDetailTitre = findViewById(R.id.tvDetailTitre);
@@ -63,32 +74,48 @@ public class DetailAnnonce extends AppCompatActivity {
         tvDetailLatitude = findViewById(R.id.tvDetailLatitude);
         tvDetailLongitude = findViewById(R.id.tvDetailLongitude);
 
-        Button btnRetourDetail =
-                findViewById(R.id.btnRetourDetail);
-
-        btnRetourDetail.setOnClickListener(v -> finish());
-
-        // Nouvelles vues ajoutées dans XML
         layoutPhotos = findViewById(R.id.layoutPhotos);
         mapDetailAnnonce = findViewById(R.id.mapDetailAnnonce);
 
-        mapDetailAnnonce.setTileSource(
-                TileSourceFactory.MAPNIK
-        );
+        btnContacter = findViewById(R.id.btnContacter);
+        btnDemanderVisite = findViewById(R.id.btnDemanderVisite);
 
+        Button btnRetourDetail = findViewById(R.id.btnRetourDetail);
+
+        btnRetourDetail.setOnClickListener(v -> finish());
+
+        mapDetailAnnonce.setTileSource(TileSourceFactory.MAPNIK);
         mapDetailAnnonce.setMultiTouchControls(true);
 
-        // Récupérer ID annonce
-        long idAnnonce =
-                getIntent().getLongExtra("idAnnonce", -1);
+        // Session étudiant
+        SessionManager session = new SessionManager(this);
 
-        if (idAnnonce == -1) {
+        etudiantEmail = session.getEmail();
+
+        etudiantNom = getIntent().getStringExtra("etudiantNom");
+
+        if (etudiantNom == null || etudiantNom.trim().isEmpty()) {
+            etudiantNom = "Étudiant";
+        }
+
+        idAnnonce = getIntent().getLongExtra("idAnnonce", -1);
+
+        if (idAnnonce <= 0) {
             Toast.makeText(this,
                     "ID annonce introuvable",
                     Toast.LENGTH_LONG).show();
             finish();
             return;
         }
+
+        // Charger les informations avant de contacter
+        btnContacter.setEnabled(false);
+
+        btnContacter.setOnClickListener(v -> ouvrirChat());
+
+        btnDemanderVisite.setOnClickListener(v ->
+                demanderVisite()
+        );
 
         chargerDetailAnnonce(idAnnonce);
     }
@@ -102,14 +129,20 @@ public class DetailAnnonce extends AppCompatActivity {
                 url,
                 null,
 
-                response -> afficherDetails(response),
+                response -> {
+                    Log.d(TAG, "ANNONCE JSON = " + response.toString());
+
+                    afficherDetails(response);
+
+                    btnContacter.setEnabled(true);
+                },
 
                 error -> {
-                    Toast.makeText(
-                            DetailAnnonce.this,
-                            "Erreur de chargement des détails",
-                            Toast.LENGTH_LONG
-                    ).show();
+                    Log.e(TAG, "Erreur API annonce", error);
+
+                    Toast.makeText(this,
+                            "Erreur chargement détails",
+                            Toast.LENGTH_LONG).show();
                 }
         );
 
@@ -118,43 +151,41 @@ public class DetailAnnonce extends AppCompatActivity {
 
     private void afficherDetails(JSONObject annonce) {
 
-        String titre = annonce.optString(
-                "titre", "Sans titre");
+        tvDetailTitre.setText(
+                annonce.optString("titre", "Sans titre")
+        );
 
-        String description = annonce.optString(
-                "description", "Aucune description");
+        tvDetailPrix.setText(
+                annonce.optString("prix", "0") + " DT / mois"
+        );
 
-        String prix = annonce.optString(
-                "prix", "0");
+        tvDetailDescription.setText(
+                annonce.optString("description", "Aucune description")
+        );
 
-        String personnes = annonce.optString(
-                "nombrePersonnes", "Non précisé");
+        tvDetailPersonnes.setText(
+                "Nombre de personnes : " +
+                        annonce.optString("nombrePersonnes", "Non précisé")
+        );
 
         double latitude = annonce.optDouble("latitude", 0);
         double longitude = annonce.optDouble("longitude", 0);
 
-        // Afficher les données
-        tvDetailTitre.setText(titre);
-        tvDetailPrix.setText(prix + " DT / mois");
-        tvDetailDescription.setText(description);
+        tvDetailLatitude.setText("Latitude : " + latitude);
+        tvDetailLongitude.setText("Longitude : " + longitude);
 
-        tvDetailPersonnes.setText(
-                "Nombre de personnes : " + personnes);
+        // Récupérer les informations du propriétaire
+        recupererInformationsProprietaire(annonce);
 
-        tvDetailLatitude.setText(
-                "Latitude : " + latitude);
+        Log.d(TAG, "EMAIL PROPRIETAIRE = " + proprietaireEmail);
+        Log.d(TAG, "NOM PROPRIETAIRE = " + proprietaireNom);
 
-        tvDetailLongitude.setText(
-                "Longitude : " + longitude);
-
-        // Récupérer toutes les photos
         JSONArray photos = annonce.optJSONArray("photos");
 
         if (photos != null && photos.length() > 0) {
             afficherToutesLesPhotos(photos);
         }
 
-        // Afficher la localisation
         if (latitude >= -90 && latitude <= 90
                 && longitude >= -180 && longitude <= 180
                 && (latitude != 0 || longitude != 0)) {
@@ -163,27 +194,155 @@ public class DetailAnnonce extends AppCompatActivity {
         }
     }
 
-    // Afficher toutes les photos
+    private void recupererInformationsProprietaire(JSONObject annonce) {
+
+        proprietaireEmail = "";
+        proprietaireNom = "";
+
+        // Essayer les différents noms possibles de l'email
+        String[] champsEmail = {
+                "proprietaireEmail",
+                "emailProprietaire",
+                "email",
+                "ownerEmail",
+                "mailProprietaire"
+        };
+
+        for (String champ : champsEmail) {
+
+            String email = annonce.optString(champ, "");
+
+            if (email != null &&
+                    !email.trim().isEmpty() &&
+                    !email.equals("null")) {
+
+                proprietaireEmail = email.trim();
+                break;
+            }
+        }
+
+        // Nom du propriétaire
+        String[] champsNom = {
+                "proprietaireNom",
+                "nomProprietaire",
+                "nomCompletProprietaire"
+        };
+
+        for (String champ : champsNom) {
+
+            String nom = annonce.optString(champ, "");
+
+            if (nom != null &&
+                    !nom.trim().isEmpty() &&
+                    !nom.equals("null")) {
+
+                proprietaireNom = nom.trim();
+                break;
+            }
+        }
+
+        // Vérifier l'objet propriétaire
+        JSONObject proprietaire =
+                annonce.optJSONObject("proprietaire");
+
+        if (proprietaire != null) {
+
+            if (proprietaireEmail.isEmpty()) {
+
+                proprietaireEmail =
+                        proprietaire.optString("email", "");
+
+                if (proprietaireEmail.isEmpty()) {
+                    proprietaireEmail =
+                            proprietaire.optString("emailProprietaire", "");
+                }
+            }
+
+            if (proprietaireNom.isEmpty()) {
+
+                proprietaireNom =
+                        proprietaire.optString("nomComplet", "");
+
+                if (proprietaireNom.isEmpty()) {
+                    proprietaireNom =
+                            proprietaire.optString("nom", "");
+                }
+            }
+        }
+    }
+
+    // Ouvrir Chat étudiant
+    private void ouvrirChat() {
+
+        if (etudiantEmail == null ||
+                etudiantEmail.trim().isEmpty()) {
+
+            Toast.makeText(this,
+                    "Veuillez vous connecter",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (proprietaireEmail == null ||
+                proprietaireEmail.trim().isEmpty()) {
+
+            Toast.makeText(this,
+                    "Email du propriétaire introuvable",
+                    Toast.LENGTH_LONG).show();
+
+            Log.e(TAG, "Email propriétaire absent du JSON");
+
+            return;
+        }
+
+        if (etudiantEmail.equalsIgnoreCase(proprietaireEmail)) {
+
+            Toast.makeText(this,
+                    "Vous ne pouvez pas contacter votre propre annonce",
+                    Toast.LENGTH_LONG).show();
+
+            return;
+        }
+
+        android.content.Intent intent =
+                new android.content.Intent(this, ChatEtudiant.class);
+
+        intent.putExtra("etudiantEmail", etudiantEmail);
+        intent.putExtra("etudiantNom", etudiantNom);
+
+        intent.putExtra("proprietaireEmail", proprietaireEmail);
+
+        intent.putExtra("proprietaireNom",
+                proprietaireNom.isEmpty()
+                        ? "Propriétaire"
+                        : proprietaireNom);
+
+        intent.putExtra("annonceId", idAnnonce);
+
+        startActivity(intent);
+    }
+
+    private void demanderVisite() {
+
+        Toast.makeText(this,
+                "Fonction demande de visite à connecter au Backend",
+                Toast.LENGTH_LONG).show();
+    }
+
     private void afficherToutesLesPhotos(JSONArray photos) {
 
         layoutPhotos.removeAllViews();
 
         for (int i = 0; i < photos.length(); i++) {
 
-            String photoBase64 = photos.optString(i, "");
+            Bitmap bitmap = convertirPhoto(photos.optString(i, ""));
 
-            Bitmap bitmap = convertirPhoto(photoBase64);
+            if (bitmap == null) continue;
 
-            if (bitmap == null) {
-                continue;
-            }
-
-            // Première photo en grand
             if (i == 0) {
                 imgDetailAnnonce.setImageBitmap(bitmap);
             }
 
-            // Créer miniature
             ImageView miniature = new ImageView(this);
 
             LinearLayout.LayoutParams params =
@@ -192,21 +351,12 @@ public class DetailAnnonce extends AppCompatActivity {
                             dpToPx(90)
                     );
 
-            params.setMargins(
-                    dpToPx(5),
-                    dpToPx(5),
-                    dpToPx(5),
-                    dpToPx(5)
-            );
+            params.setMargins(5, 5, 5, 5);
 
             miniature.setLayoutParams(params);
-            miniature.setScaleType(
-                    ImageView.ScaleType.CENTER_CROP
-            );
-
+            miniature.setScaleType(ImageView.ScaleType.CENTER_CROP);
             miniature.setImageBitmap(bitmap);
 
-            // Changer la grande photo au clic
             miniature.setOnClickListener(v ->
                     imgDetailAnnonce.setImageBitmap(bitmap)
             );
@@ -215,13 +365,13 @@ public class DetailAnnonce extends AppCompatActivity {
         }
     }
 
-    // Convertir Base64 en Bitmap
     private Bitmap convertirPhoto(String photoBase64) {
 
         try {
-            if (photoBase64 == null
-                    || photoBase64.trim().isEmpty()
-                    || photoBase64.equals("null")) {
+
+            if (photoBase64 == null ||
+                    photoBase64.trim().isEmpty() ||
+                    photoBase64.equals("null")) {
                 return null;
             }
 
@@ -233,32 +383,24 @@ public class DetailAnnonce extends AppCompatActivity {
                 );
             }
 
-            byte[] imageBytes = Base64.decode(
+            byte[] bytes = Base64.decode(
                     imageData,
                     Base64.DEFAULT
             );
 
             return BitmapFactory.decodeByteArray(
-                    imageBytes,
-                    0,
-                    imageBytes.length
+                    bytes, 0, bytes.length
             );
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Erreur conversion photo", e);
             return null;
         }
     }
 
-    // Afficher la localisation sur la carte
-    private void afficherLocalisation(
-            double latitude,
-            double longitude) {
+    private void afficherLocalisation(double latitude, double longitude) {
 
-        GeoPoint position = new GeoPoint(
-                latitude,
-                longitude
-        );
+        GeoPoint position = new GeoPoint(latitude, longitude);
 
         mapDetailAnnonce.getController().setZoom(15.0);
         mapDetailAnnonce.getController().setCenter(position);
@@ -280,6 +422,7 @@ public class DetailAnnonce extends AppCompatActivity {
     }
 
     private int dpToPx(int dp) {
+
         return (int) (dp * getResources()
                 .getDisplayMetrics().density);
     }

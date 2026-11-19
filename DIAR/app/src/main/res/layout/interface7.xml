@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <!-- Contenu défilable (Header, Recherche, Appartements, Colocataires) -->
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -24,7 +23,8 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- 1. En-tête : Bonjour Nom + Photo de profil -->
+            <!-- HEADER ET PROFIL ETUDIANT -->
+
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -41,7 +41,7 @@
                         android:id="@+id/tvBonjour"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Bonjour  👋"
+                        android:text="Bonjour 👋"
                         android:textColor="#1F2937"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -59,7 +59,6 @@
                             android:src="@drawable/ic_location"
                             tools:ignore="ContentDescription" />
 
-                        <!-- ID ajouté pour rendre l'université dynamique -->
                         <TextView
                             android:id="@+id/tvUniversite"
                             android:layout_width="wrap_content"
@@ -71,7 +70,6 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Photo de profil circulaire via CardView -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="44dp"
                     android:layout_height="44dp"
@@ -81,7 +79,6 @@
                     app:cardElevation="0dp"
                     app:cardBackgroundColor="@android:color/transparent">
 
-                    <!-- ID ajouté pour l'image de profil -->
                     <ImageView
                         android:id="@+id/ivUserPhoto"
                         android:layout_width="match_parent"
@@ -90,9 +87,11 @@
                         android:src="@drawable/person"
                         tools:ignore="ContentDescription" />
                 </androidx.cardview.widget.CardView>
+
             </RelativeLayout>
 
-            <!-- 2. Barre de recherche -->
+            <!-- BARRE DE RECHERCHE -->
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="46dp"
@@ -122,7 +121,8 @@
                     android:autofillHints="" />
             </LinearLayout>
 
-            <!-- 3. Section : Recommandé pour vous -->
+            <!-- SECTION ANNONCES -->
+
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -131,7 +131,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Recommandé pour vous"
+                    android:text="Logements disponibles"
                     android:textColor="#1F2937"
                     android:textSize="16sp"
                     android:textStyle="bold"
@@ -145,133 +145,27 @@
                     android:textColor="#0D9488"
                     android:textSize="13sp"
                     android:layout_alignParentEnd="true" />
+
             </RelativeLayout>
 
-            <!-- Carte Appartement -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- LISTE DYNAMIQUE DES ANNONCES -->
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvAnnonces"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@android:color/white"
-                app:strokeWidth="1dp"
-                app:strokeColor="#F3F4F6">
+                android:nestedScrollingEnabled="false"
+                android:clipToPadding="false"
+                android:paddingBottom="12dp"
+                android:overScrollMode="never" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
 
-                    <!-- Image + Bouton Cœur -->
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="160dp">
+            <!-- SECTION COLOCATAIRES -->
 
-                        <ImageView
-                            android:id="@+id/ivAppart"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/appart"
-                            tools:ignore="ContentDescription" />
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_alignParentEnd="true"
-                            android:layout_alignParentTop="true"
-                            android:layout_margin="12dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="4dp"
-                            app:cardBackgroundColor="@android:color/white"
-                            app:strokeWidth="0dp">
-
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_favorite"
-                                tools:ignore="ContentDescription" />
-                        </com.google.android.material.card.MaterialCardView>
-                    </RelativeLayout>
-
-                    <!-- Infos Appartement -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
-
-                        <TextView
-                            android:id="@+id/tvTitreLogement"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Appartement à Sahloul"
-                            android:textColor="#1F2937"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvPrixLogement"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="350 DT / mois"
-                            android:textColor="#1F2937"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="4dp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="8dp">
-
-                            <!-- Distance -->
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/ic_location"
-                                tools:ignore="ContentDescription" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="1.2 km"
-                                android:textColor="#6B7280"
-                                android:textSize="12sp"
-                                android:layout_marginStart="4dp" />
-
-                            <View
-                                android:layout_width="0dp"
-                                android:layout_height="0dp"
-                                android:layout_weight="1" />
-
-                            <!-- Note / Étoile -->
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/ic_star"
-                                tools:ignore="ContentDescription" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="4.7 (12)"
-                                android:textColor="#6B7280"
-                                android:textSize="12sp"
-                                android:layout_marginStart="4dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- 4. Section : Colocataires compatibles -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:layout_marginBottom="12dp">
 
                 <TextView
@@ -291,15 +185,18 @@
                     android:textColor="#0D9488"
                     android:textSize="13sp"
                     android:layout_alignParentEnd="true" />
+
             </RelativeLayout>
 
-            <!-- Cartes Colocataires -->
+            <!-- CARTES COLOCATAIRES -->
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <!-- Colocataire 1 : Hamza -->
+                <!-- HAMZA -->
+
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -322,8 +219,7 @@
                             android:layout_width="44dp"
                             android:layout_height="44dp"
                             app:cardCornerRadius="22dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="@android:color/transparent">
+                            app:cardElevation="0dp">
 
                             <ImageView
                                 android:layout_width="match_parent"
@@ -356,10 +252,12 @@
                                 android:textStyle="bold"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Colocataire 2 : Yassine -->
+                <!-- YASSINE -->
+
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -382,8 +280,7 @@
                             android:layout_width="44dp"
                             android:layout_height="44dp"
                             app:cardCornerRadius="22dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="@android:color/transparent">
+                            app:cardElevation="0dp">
 
                             <ImageView
                                 android:layout_width="match_parent"
@@ -416,6 +313,7 @@
                                 android:textStyle="bold"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -424,7 +322,8 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- 5. Barre de navigation inférieure incluse -->
+    <!-- BOTTOM NAVIGATION -->
+
     <include
         android:id="@+id/bottomNavigation"
         layout="@layout/interface_barre_navigation"

@@ -140,20 +140,34 @@
             android:layout_height="250dp"
             android:layout_marginTop="16dp" />
 
-        <!-- Bouton Supprimer -->
+
+
+        <!-- Bouton Contacter -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSupprimerAnnonce"
+            android:id="@+id/btnContacter"
             android:layout_width="match_parent"
             android:layout_height="55dp"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="20dp"
-            android:text="Supprimer cette annonce"
+            android:text="Contacter le propriétaire"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:textSize="16sp"
-            android:textStyle="bold"
-            app:backgroundTint="#D32F2F"
+            app:backgroundTint="#315C46"
             app:cornerRadius="14dp" />
+
+        <!-- Bouton Demander une visite -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDemanderVisite"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="12dp"
+            android:text="Demander une visite"
+            android:textAllCaps="false"
+            android:textColor="#315C46"
+            android:textSize="16sp"
+            app:backgroundTint="#E8F1EC"
+            app:cornerRadius="14dp" />
+
 
     </LinearLayout>
 

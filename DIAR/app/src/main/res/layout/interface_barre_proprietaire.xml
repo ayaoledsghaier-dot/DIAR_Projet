@@ -2,7 +2,6 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/bottomNavigationProprietaire"
     android:layout_width="match_parent"
     android:layout_height="70dp"
     android:background="@drawable/bg_bottom_nav"
@@ -12,7 +11,7 @@
     android:paddingTop="6dp"
     android:paddingBottom="6dp">
 
-    <!-- Accueil (actif) -->
+    <!-- Accueil -->
     <LinearLayout
         android:id="@+id/nav_prop_accueil"
         android:layout_width="0dp"
@@ -28,29 +27,27 @@
             android:id="@+id/ic_nav_prop_accueil"
             android:layout_width="26dp"
             android:layout_height="26dp"
-            android:importantForAccessibility="no"
             android:src="@drawable/ic_home"
-            app:tint="#1B8A5A" />
+            app:tint="#1B8A5A"/>
 
         <TextView
             android:id="@+id/tv_nav_prop_accueil"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
             android:text="Accueil"
             android:textColor="#1B8A5A"
             android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
 
         <View
             android:id="@+id/indicator_nav_prop_accueil"
             android:layout_width="56dp"
             android:layout_height="3dp"
             android:layout_marginTop="4dp"
-            android:background="@drawable/bg_nav_indicator" />
+            android:background="@drawable/bg_nav_indicator"/>
     </LinearLayout>
 
-    <!-- Mes annonces -->
+    <!-- Annonces -->
     <LinearLayout
         android:id="@+id/nav_prop_annonces"
         android:layout_width="0dp"
@@ -66,18 +63,16 @@
             android:id="@+id/ic_nav_prop_annonces"
             android:layout_width="26dp"
             android:layout_height="26dp"
-            android:importantForAccessibility="no"
             android:src="@drawable/ic_building"
-            app:tint="#64748B" />
+            app:tint="#64748B"/>
 
         <TextView
             android:id="@+id/tv_nav_prop_annonces"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="Mes demandes "
+            android:text="Mes demandes"
             android:textColor="#64748B"
-            android:textSize="12sp" />
+            android:textSize="12sp"/>
 
         <View
             android:id="@+id/indicator_nav_prop_annonces"
@@ -85,7 +80,7 @@
             android:layout_height="3dp"
             android:layout_marginTop="4dp"
             android:background="@drawable/bg_nav_indicator"
-            android:visibility="invisible" />
+            android:visibility="invisible"/>
     </LinearLayout>
 
     <!-- Messages -->
@@ -104,18 +99,16 @@
             android:id="@+id/ic_nav_prop_messages"
             android:layout_width="26dp"
             android:layout_height="26dp"
-            android:importantForAccessibility="no"
             android:src="@drawable/ic_chat"
-            app:tint="#64748B" />
+            app:tint="#64748B"/>
 
         <TextView
             android:id="@+id/tv_nav_prop_messages"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
             android:text="Messages"
             android:textColor="#64748B"
-            android:textSize="12sp" />
+            android:textSize="12sp"/>
 
         <View
             android:id="@+id/indicator_nav_prop_messages"
@@ -123,7 +116,7 @@
             android:layout_height="3dp"
             android:layout_marginTop="4dp"
             android:background="@drawable/bg_nav_indicator"
-            android:visibility="invisible" />
+            android:visibility="invisible"/>
     </LinearLayout>
 
     <!-- Profil -->
@@ -142,18 +135,16 @@
             android:id="@+id/ic_nav_prop_profil"
             android:layout_width="26dp"
             android:layout_height="26dp"
-            android:importantForAccessibility="no"
             android:src="@drawable/ic_person"
-            app:tint="#64748B" />
+            app:tint="#64748B"/>
 
         <TextView
             android:id="@+id/tv_nav_prop_profil"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
             android:text="Profil"
             android:textColor="#64748B"
-            android:textSize="12sp" />
+            android:textSize="12sp"/>
 
         <View
             android:id="@+id/indicator_nav_prop_profil"
@@ -161,7 +152,7 @@
             android:layout_height="3dp"
             android:layout_marginTop="4dp"
             android:background="@drawable/bg_nav_indicator"
-            android:visibility="invisible" />
+            android:visibility="invisible"/>
     </LinearLayout>
 
 </LinearLayout>

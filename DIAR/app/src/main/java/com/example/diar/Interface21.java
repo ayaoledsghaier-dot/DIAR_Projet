@@ -1,3 +1,4 @@
+
 package com.example.diar;
 
 import android.content.Intent;
@@ -16,29 +17,52 @@ public class Interface21 extends AppCompatActivity {
     private LinearLayout conversationMariem;
     private LinearLayout conversationYassine;
 
+    private boolean proprietaire;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.interface21);
 
-        // Activer le bouton Messages
-        NavigationProprietaire.setup(this, R.id.nav_prop_messages);
+        // 1. Déterminer le type de compte
+        String type = getIntent().getStringExtra("typeCompte");
 
-        // Récupérer les conversations
+        if (type == null) {
+            type = getIntent().getStringExtra("typeUtilisateur");
+        }
+
+        proprietaire =
+                "PROPRIETAIRE".equalsIgnoreCase(type)
+                        || "proprietaire".equalsIgnoreCase(type)
+                        || getIntent().getStringExtra("emailProprietaire") != null;
+
+        // 2. Configurer la navigation
+        if (proprietaire) {
+            NavigationProprietaire.setup(
+                    this,
+                    R.id.nav_prop_messages
+            );
+        } else {
+            NavigationEtudiant.setup(this, 3);
+        }
+
+        // 3. Récupérer les conversations
         conversationAhmed = findViewById(R.id.conversationAhmed);
         conversationMariem = findViewById(R.id.conversationMariem);
         conversationYassine = findViewById(R.id.conversationYassine);
 
-        // Ouvrir les conversations
+        // 4. Ouvrir les conversations
         ouvrirConversation(conversationAhmed, "Ahmed Ben Ali");
         ouvrirConversation(conversationMariem, "Mariem Trabelsi");
         ouvrirConversation(conversationYassine, "Yassine Mansour");
 
-        // Barre de recherche
+        // 5. Configurer la recherche
         configurerRecherche();
     }
 
-    private void ouvrirConversation(LinearLayout conversation, String nom) {
+    private void ouvrirConversation(
+            LinearLayout conversation,
+            String nom) {
 
         if (conversation == null) return;
 
@@ -51,16 +75,38 @@ public class Interface21 extends AppCompatActivity {
 
             intent.putExtra("nomEtudiant", nom);
 
-            // Garder les informations du propriétaire
             intent.putExtra(
-                    "nomProprietaire",
-                    getIntent().getStringExtra("nomProprietaire")
+                    "typeCompte",
+                    proprietaire ? "PROPRIETAIRE" : "ETUDIANT"
             );
 
             intent.putExtra(
-                    "emailProprietaire",
-                    getIntent().getStringExtra("emailProprietaire")
+                    "typeUtilisateur",
+                    proprietaire ? "proprietaire" : "etudiant"
             );
+
+            if (proprietaire) {
+
+                intent.putExtra(
+                        "nomProprietaire",
+                        getIntent().getStringExtra("nomProprietaire")
+                );
+
+                intent.putExtra(
+                        "emailProprietaire",
+                        getIntent().getStringExtra("emailProprietaire")
+                );
+
+            } else {
+
+                SessionManager sessionManager =
+                        new SessionManager(this);
+
+                intent.putExtra(
+                        "emailEtudiant",
+                        sessionManager.getEmail()
+                );
+            }
 
             startActivity(intent);
         });
@@ -68,7 +114,8 @@ public class Interface21 extends AppCompatActivity {
 
     private void configurerRecherche() {
 
-        EditText recherche = findViewById(R.id.edtRechercheConversation);
+        EditText recherche =
+                findViewById(R.id.edtRechercheConversation);
 
         if (recherche == null) return;
 
@@ -76,12 +123,18 @@ public class Interface21 extends AppCompatActivity {
 
             @Override
             public void beforeTextChanged(
-                    CharSequence s, int start, int count, int after) {
+                    CharSequence s,
+                    int start,
+                    int count,
+                    int after) {
             }
 
             @Override
             public void onTextChanged(
-                    CharSequence s, int start, int before, int count) {
+                    CharSequence s,
+                    int start,
+                    int before,
+                    int count) {
 
                 String texte = s.toString()
                         .trim()
@@ -119,10 +172,10 @@ public class Interface21 extends AppCompatActivity {
 
         if (conversation == null) return;
 
-        if (nom.contains(recherche)) {
-            conversation.setVisibility(View.VISIBLE);
-        } else {
-            conversation.setVisibility(View.GONE);
-        }
+        conversation.setVisibility(
+                nom.contains(recherche)
+                        ? View.VISIBLE
+                        : View.GONE
+        );
     }
 }

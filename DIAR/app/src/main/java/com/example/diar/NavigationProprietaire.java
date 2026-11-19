@@ -16,6 +16,23 @@ public class NavigationProprietaire {
 
     public static void setup(Activity activity, int pageActive) {
 
+        // Afficher la barre propriétaire
+        View barreProp = activity.findViewById(
+                R.id.barre_navigation_proprietaire
+        );
+
+        View barreEtudiant = activity.findViewById(
+                R.id.barre_navigation_etudiant
+        );
+
+        if (barreProp != null) {
+            barreProp.setVisibility(View.VISIBLE);
+        }
+
+        if (barreEtudiant != null) {
+            barreEtudiant.setVisibility(View.GONE);
+        }
+
         int[] itemIds = {
                 R.id.nav_prop_accueil,
                 R.id.nav_prop_annonces,
@@ -44,11 +61,13 @@ public class NavigationProprietaire {
                 R.id.indicator_nav_prop_profil
         };
 
-        // Apparence des éléments
         for (int i = 0; i < itemIds.length; i++) {
 
-            boolean active = itemIds[i] == pageActive;
+            final int destinationId = itemIds[i];
 
+            boolean active = destinationId == pageActive;
+
+            View item = activity.findViewById(itemIds[i]);
             ImageView icon = activity.findViewById(iconIds[i]);
             TextView text = activity.findViewById(textIds[i]);
             View indicator = activity.findViewById(indicatorIds[i]);
@@ -59,6 +78,7 @@ public class NavigationProprietaire {
 
             if (text != null) {
                 text.setTextColor(active ? VERT : GRIS);
+
                 text.setTypeface(
                         null,
                         active ? Typeface.BOLD : Typeface.NORMAL
@@ -70,44 +90,17 @@ public class NavigationProprietaire {
                         active ? View.VISIBLE : View.INVISIBLE
                 );
             }
-        }
 
-        // Accueil
-        View accueil = activity.findViewById(R.id.nav_prop_accueil);
-        if (accueil != null) {
-            accueil.setOnClickListener(v ->
-                    ouvrir(activity, AccueilProprietaire.class,
-                            pageActive, R.id.nav_prop_accueil));
-        }
-
-        // Mes demandes
-        View annonces = activity.findViewById(R.id.nav_prop_annonces);
-        if (annonces != null) {
-            annonces.setOnClickListener(v ->
-                    ouvrir(activity, interface20.class,
-                            pageActive, R.id.nav_prop_annonces));
-        }
-
-        // Messages
-        View messages = activity.findViewById(R.id.nav_prop_messages);
-        if (messages != null) {
-            messages.setOnClickListener(v ->
-                    ouvrir(activity, Interface21.class,
-                            pageActive, R.id.nav_prop_messages));
-        }
-
-        // Profil
-        View profil = activity.findViewById(R.id.nav_prop_profil);
-        if (profil != null) {
-            profil.setOnClickListener(v ->
-                    ouvrir(activity, interface22.class,
-                            pageActive, R.id.nav_prop_profil));
+            if (item != null) {
+                item.setOnClickListener(v ->
+                        ouvrir(activity, pageActive, destinationId)
+                );
+            }
         }
     }
 
     private static void ouvrir(
             Activity activity,
-            Class<?> destination,
             int pageActive,
             int pageDemandee) {
 
@@ -115,7 +108,31 @@ public class NavigationProprietaire {
             return;
         }
 
+        Class<?> destination;
+
+        if (pageDemandee == R.id.nav_prop_accueil) {
+
+            destination = AccueilProprietaire.class;
+
+        } else if (pageDemandee == R.id.nav_prop_annonces) {
+
+            destination = interface20.class;
+
+        } else if (pageDemandee == R.id.nav_prop_messages) {
+
+            destination = Interface21.class;
+
+        } else if (pageDemandee == R.id.nav_prop_profil) {
+
+            destination = interface22.class;
+
+        } else {
+            return;
+        }
+
         Intent intent = new Intent(activity, destination);
+
+        intent.putExtra("typeCompte", "PROPRIETAIRE");
 
         intent.putExtra(
                 "nomProprietaire",
@@ -128,5 +145,6 @@ public class NavigationProprietaire {
         );
 
         activity.startActivity(intent);
+        activity.finish();
     }
 }

@@ -1,40 +1,44 @@
+
 package com.example.diar;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
 public class SessionManager {
+
     private static final String PREF_NAME = "DiarUserSession";
     private static final String KEY_EMAIL = "USER_EMAIL";
-    private static final String KEY_NAME = "USER_NAME"; // Clé pour stocker le nom
-    private SharedPreferences prefs;
-    private SharedPreferences.Editor editor;
+    private static final String KEY_NAME = "USER_NAME";
+
+    private final SharedPreferences prefs;
 
     public SessionManager(Context context) {
-        prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        editor = prefs.edit();
+        prefs = context.getSharedPreferences(
+                PREF_NAME,
+                Context.MODE_PRIVATE
+        );
     }
 
-    // Sauvegarder l'e-mail et le nom complet en même temps
+    // Sauvegarder la session
     public void sauvegarderSession(String email, String nom) {
-        editor.putString(KEY_EMAIL, email);
-        editor.putString(KEY_NAME, nom);
-        editor.apply();
+        prefs.edit()
+                .putString(KEY_EMAIL, email)
+                .putString(KEY_NAME, nom)
+                .apply();
     }
 
-    // Récupérer l'e-mail
+    // Récupérer l'email
     public String getEmail() {
         return prefs.getString(KEY_EMAIL, null);
     }
 
-    // Récupérer le nom complet dans n'importe quelle interface
+    // Récupérer le nom
     public String getNom() {
         return prefs.getString(KEY_NAME, null);
     }
 
-    // Effacer la session (déconnexion)
+    // Déconnexion
     public void deconnecter() {
-        editor.clear();
-        editor.apply();
+        prefs.edit().clear().apply();
     }
 }
