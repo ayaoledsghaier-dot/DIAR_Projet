@@ -1,105 +1,137 @@
 package com.example.diar;
 
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
-import com.google.android.material.imageview.ShapeableImageView;
-
+import java.io.IOException;
 import java.util.List;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class ProfilAdapter extends RecyclerView.Adapter<ProfilAdapter.ProfilViewHolder> {
 
-    private List<Etudiant> listeEtudiants;
+    public interface OnClick {
+        void onClick(Etudiant e);
+    }
 
-    public ProfilAdapter(List<Etudiant> listeEtudiants) {
-        this.listeEtudiants = listeEtudiants;
+    private List<Etudiant> liste;
+    private OnClick listener;
+    private String emailConnecte;
+    private final OkHttpClient client = new OkHttpClient();
+
+    public ProfilAdapter(List<Etudiant> liste, String emailConnecte, OnClick listener) {
+        this.liste = liste;
+        this.emailConnecte = emailConnecte;
+        this.listener = listener;
+    }
+
+    public ProfilAdapter(List<Etudiant> liste, OnClick listener) {
+        this.liste = liste;
+        this.emailConnecte = "salma@test.com";
+        this.listener = listener;
     }
 
     @NonNull
     @Override
     public ProfilViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_profil_coloc, parent, false);
-        return new ProfilViewHolder(view);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_colocataire, parent, false);
+        return new ProfilViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ProfilViewHolder holder, int position) {
-        Etudiant etudiant = listeEtudiants.get(position);
+    public void onBindViewHolder(@NonNull ProfilViewHolder h, int position) {
+        Etudiant e = liste.get(position);
+        Context context = h.itemView.getContext();
+        int colocId = e.getId();
 
-        // Nom et âge
-        String nom = etudiant.getNomComplet() != null ? etudiant.getNomComplet() : "Étudiant";
-        int age = etudiant.getAge() > 0 ? etudiant.getAge() : 21;
-        holder.txtNom.setText(nom + ", " + age + " ans");
-
-        // Affichage dynamique du pourcentage de compatibilité
-        int score = etudiant.getPourcentage();
-        holder.txtCompatibilite.setText(score + "% Compatible");
-
-        // Université
-        String universite = etudiant.getUniversite() != null ? etudiant.getUniversite() : "Université de Sousse";
-        holder.txtUniversiteAge.setText(universite);
-
-        // Budget et propreté
-        double budget = etudiant.getBudgetMax() > 0 ? etudiant.getBudgetMax() : 300.0;
-        String proprete = etudiant.getProprete() != null && !etudiant.getProprete().isEmpty() ? " • Propreté : " + etudiant.getProprete() : "";
-        holder.txtBudget.setText("Budget : " + budget + " DT" + proprete);
-
-        // 🖼️ Chargement de la photo de profil avec Glide
-        if (etudiant.getPhotoUrl() != null && !etudiant.getPhotoUrl().isEmpty()) {
-            Glide.with(holder.itemView.getContext())
-                    .load(etudiant.getPhotoUrl())
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .error(R.drawable.ic_launcher_foreground)
-                    .into(holder.imgProfil);
+        h.txtNom.setText(e.getNomComplet());
+        if (e.getPourcentageCompatible() != null) {
+            h.txtCompatibilite.setText(e.getPourcentageCompatible().intValue() + "% compatible");
         } else {
-            holder.imgProfil.setImageResource(R.drawable.ic_launcher_foreground);
+            h.txtCompatibilite.setText("—% compatible");
+        }
+        h.txtUniversiteAge.setText(e.getUniversite() + " • " + e.getAge() + " ans");
+        h.txtBudget.setText("Budget : " + e.getBudgetMax() + " DT");
+
+        String photoUrl = e.getPhotoUrl();
+        if (photoUrl != null && !photoUrl.isEmpty() && !photoUrl.equals("null")) {
+            Glide.with(context)
+                    .load(Config.BASE_URL + photoUrl)
+                    .placeholder(R.drawable.ic_profile)
+                    .error(R.drawable.ic_profile)
+                    .circleCrop()
+                    .into(h.imgProfil);
+        } else {
+            h.imgProfil.setImageResource(R.drawable.ic_profile);
         }
 
-        /// Gestion du clic sur une carte de profil pour ouvrir les détails
-        holder.itemView.setOnClickListener(v -> {
-            int currentPosition = holder.getAdapterPosition();
-            if (currentPosition != RecyclerView.NO_POSITION) {
-                // On récupère l'étudiant de cette position sans réécrire "Etudiant" devant
-                Etudiant etudiantClique = listeEtudiants.get(currentPosition);
+        h.ivFavori.setImageResource(e.isFavori() ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
 
-                Context context = v.getContext();
-                Intent intent = new Intent(context, Interface13.class);
+        h.ivFavori.setOnClickListener(v -> toggleFavoriBackend(h, e, colocId));
 
-                intent.putExtra("NOM", etudiantClique.getNomComplet());
-                intent.putExtra("POURCENTAGE", etudiantClique.getPourcentage());
-                intent.putExtra("UNIVERSITE", etudiantClique.getUniversite());
-                intent.putExtra("AGE", etudiantClique.getAge());
-                intent.putExtra("BUDGET", etudiantClique.getBudgetMax());
-                intent.putExtra("QUARTIER", etudiantClique.getQuartier());
-                intent.putExtra("MODE_DE_VIE", etudiantClique.getModeDeVie());
-                intent.putExtra("PROPRETE", etudiantClique.getProprete());
-                intent.putExtra("ANIMAUX", etudiantClique.getAnimauxAcceptes());
-                intent.putExtra("PHOTO_URL", etudiant.getPhotoUrl());
+        h.itemView.setOnClickListener(v -> listener.onClick(e));
+    }
 
-                context.startActivity(intent);
+    private void toggleFavoriBackend(ProfilViewHolder h, Etudiant e, int colocId) {
+        Context context = h.itemView.getContext();
+        if (colocId == -1) {
+            Toast.makeText(context, "Erreur : coloc introuvable", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String url = Config.BASE_URL + "/api/etudiants/favoris?email=" + emailConnecte + "&colocId=" + colocId;
+        Request.Builder builder = new Request.Builder().url(url);
+        if (e.isFavori()) {
+            builder.delete();
+        } else {
+            RequestBody body = RequestBody.create("", MediaType.parse("application/json"));
+            builder.post(body);
+        }
+        client.newCall(builder.build()).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException ex) {
+                h.itemView.post(() -> Toast.makeText(context, "Erreur serveur : " + ex.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String json = response.body().string();
+                if (response.isSuccessful()) {
+                    e.setFavori(!e.isFavori());
+                    boolean nouveau = e.isFavori();
+                    h.itemView.post(() -> {
+                        h.ivFavori.setImageResource(nouveau ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
+                        Toast.makeText(context, nouveau ? e.getNomComplet() + " ajouté aux favoris ❤" : e.getNomComplet() + " retiré des favoris", Toast.LENGTH_SHORT).show();
+                    });
+                } else {
+                    h.itemView.post(() -> Toast.makeText(context, "Erreur : " + response.code() + " " + json, Toast.LENGTH_SHORT).show());
+                }
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return listeEtudiants.size();
+        return liste.size();
     }
 
     public static class ProfilViewHolder extends RecyclerView.ViewHolder {
-        ShapeableImageView imgProfil;
+        ImageView imgProfil, ivFavori;
         TextView txtNom, txtCompatibilite, txtUniversiteAge, txtBudget;
-
         public ProfilViewHolder(@NonNull View itemView) {
             super(itemView);
             imgProfil = itemView.findViewById(R.id.imgProfil);
+            ivFavori = itemView.findViewById(R.id.ivFavori);
             txtNom = itemView.findViewById(R.id.txtNom);
             txtCompatibilite = itemView.findViewById(R.id.txtCompatibilite);
             txtUniversiteAge = itemView.findViewById(R.id.txtUniversiteAge);

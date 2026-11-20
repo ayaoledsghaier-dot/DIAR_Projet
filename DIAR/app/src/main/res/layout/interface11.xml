@@ -8,7 +8,6 @@
     android:background="#FFFFFF">
 
     <!-- En-tête -->
-    <!-- Bouton Retour -->
     <ImageButton
         android:id="@+id/btnBack"
         android:layout_width="40dp"
@@ -47,14 +46,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- ✅ ONGLET LOGEMENTS - CLIQUABLE -->
         <LinearLayout
+            android:id="@+id/tabLogements"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
 
             <TextView
+                android:id="@+id/tvTabLogements"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Logements 🏠"
@@ -63,25 +68,39 @@
                 android:textStyle="bold" />
 
             <View
+                android:id="@+id/underlineLogements"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_marginTop="8dp"
                 android:background="#00796B" />
         </LinearLayout>
 
+        <!-- ✅ ONGLET COLOCATAIRES - CLIQUABLE -->
         <LinearLayout
+            android:id="@+id/tabColocataires"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
 
             <TextView
+                android:id="@+id/tvTabColocataires"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Colocataires 👥"
                 android:textColor="#A0AEC0"
                 android:textSize="15sp" />
+
+            <View
+                android:id="@+id/underlineColocataires"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_marginTop="8dp"
+                android:background="#FFFFFF" />
         </LinearLayout>
     </LinearLayout>
 
@@ -94,8 +113,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Liste des favoris -->
+    <!-- ✅ CONTENU LOGEMENTS - visible au début -->
     <ScrollView
+        android:id="@+id/scrollLogements"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="false"
@@ -144,7 +164,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Appartement Sahloul ❤️"
+                            android:text="Appartement Sahloul ❤"
                             android:textColor="#0B132B"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -203,7 +223,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Studio Khezema ❤️"
+                            android:text="Studio Khezema ❤"
                             android:textColor="#0B132B"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -262,7 +282,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Maison Bouhdima ❤️"
+                            android:text="Maison Bouhdima ❤"
                             android:textColor="#0B132B"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -289,6 +309,71 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <!-- ✅ CONTENU COLOCATAIRES FAVORIS - caché au début -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutColocsFavoris"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/dividerTab"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Liste des colocs favoris - même design que Interface 12 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewFavorisColocs"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:clipToPadding="false"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Message si aucun favori -->
+        <LinearLayout
+            android:id="@+id/layoutEmptyColocs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💔"
+                android:textSize="48sp"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Aucun colocataire favori"
+                android:textColor="#0B132B"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Clique sur ❤ sur un profil pour l'ajouter ici"
+                android:textColor="#7A869A"
+                android:textSize="13sp"
+                android:layout_marginTop="6dp"
+                android:gravity="center" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Barre de navigation incluse -->
     <include

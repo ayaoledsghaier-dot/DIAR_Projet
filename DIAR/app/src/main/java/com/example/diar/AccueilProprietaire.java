@@ -29,7 +29,7 @@ import org.json.JSONObject;
 public class AccueilProprietaire extends AppCompatActivity {
 
     private static final String BASE_URL =
-            "http://192.168.1.22:8083";
+            Config.BASE_URL + "";
 
     private ShapeableImageView imgOwnerProfile;
 

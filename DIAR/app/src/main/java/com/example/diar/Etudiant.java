@@ -2,119 +2,98 @@ package com.example.diar;
 
 public class Etudiant {
 
+    private int id;
     private String nomComplet;
     private String email;
-    private int age;
+    private String motDePasse;
+    private String genre;
     private String universite;
-    private double budgetMax;
+    private String niveau;
+    private String photoUrl;
+    private String statutVerification;
+    private Integer age;
+
+    private String typeLogement;
+    private String locationType;
+    private Double budgetMax;
+    private String equipements;
     private String quartier;
-    private int pourcentage;
-    private String proprete;
+
     private String modeDeVie;
     private String nbColocataires;
     private String animauxAcceptes;
-    private String photoUrl;
+    private String proprete;
 
-    // 1. Constructeur vide (nécessaire pour certaines initialisations)
+    private Double pourcentageCompatible;
+    private boolean isFavori = false;
+
     public Etudiant() {
     }
 
-    // 2. Constructeur complet
-    public Etudiant(String nomComplet, String email, String universite, int age, double budgetMax, String modeDeVie, String nbColocataires, String proprete, String animauxAcceptes) {
-        this.nomComplet = nomComplet;
-        this.email = email;
-        this.universite = universite;
-        this.age = age;
-        this.budgetMax = budgetMax;
-        this.modeDeVie = modeDeVie;
-        this.nbColocataires = nbColocataires;
-        this.proprete = proprete;
-        this.animauxAcceptes = animauxAcceptes;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public void setId(long id) { this.id = (int) id; }
 
-    // --- Getters et Setters ---
+    public String getNomComplet() { return nomComplet; }
+    public void setNomComplet(String nomComplet) { this.nomComplet = nomComplet; }
 
-    public String getNomComplet() {
-        return nomComplet;
-    }
-    public void setNomComplet(String nomComplet) {
-        this.nomComplet = nomComplet;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public String getEmail() {
-        return email;
-    }
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public String getMotDePasse() { return motDePasse; }
+    public void setMotDePasse(String motDePasse) { this.motDePasse = motDePasse; }
 
-    public int getAge() {
-        return age;
-    }
-    public void setAge(int age) {
-        this.age = age;
-    }
+    public String getGenre() { return genre; }
+    public void setGenre(String genre) { this.genre = genre; }
 
-    public String getUniversite() {
-        return universite;
-    }
-    public void setUniversite(String universite) {
-        this.universite = universite;
-    }
+    public String getUniversite() { return universite; }
+    public void setUniversite(String universite) { this.universite = universite; }
 
-    public double getBudgetMax() {
-        return budgetMax;
-    }
-    public void setBudgetMax(double budgetMax) {
-        this.budgetMax = budgetMax;
-    }
+    public String getNiveau() { return niveau; }
+    public void setNiveau(String niveau) { this.niveau = niveau; }
 
-    public String getQuartier() {
-        return quartier;
-    }
-    public void setQuartier(String quartier) {
-        this.quartier = quartier;
-    }
+    public String getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
 
-    public int getPourcentage() {
-        return pourcentage;
-    }
-    public void setPourcentage(int pourcentage) {
-        this.pourcentage = pourcentage;
-    }
+    public String getStatutVerification() { return statutVerification; }
+    public void setStatutVerification(String statutVerification) { this.statutVerification = statutVerification; }
 
-    public String getProprete() {
-        return proprete;
-    }
-    public void setProprete(String proprete) {
-        this.proprete = proprete;
-    }
+    public Integer getAge() { return age; }
+    public void setAge(Integer age) { this.age = age; }
+    public void setAge(int age) { this.age = age; }
 
-    public String getModeDeVie() {
-        return modeDeVie;
-    }
-    public void setModeDeVie(String modeDeVie) {
-        this.modeDeVie = modeDeVie;
-    }
+    public String getTypeLogement() { return typeLogement; }
+    public void setTypeLogement(String typeLogement) { this.typeLogement = typeLogement; }
 
-    public String getNbColocataires() {
-        return nbColocataires;
-    }
-    public void setNbColocataires(String nbColocataires) {
-        this.nbColocataires = nbColocataires;
-    }
+    public String getLocationType() { return locationType; }
+    public void setLocationType(String locationType) { this.locationType = locationType; }
 
-    public String getAnimauxAcceptes() {
-        return animauxAcceptes;
-    }
-    public void setAnimauxAcceptes(String animauxAcceptes) {
-        this.animauxAcceptes = animauxAcceptes;
-    }
+    public Double getBudgetMax() { return budgetMax; }
+    public void setBudgetMax(Double budgetMax) { this.budgetMax = budgetMax; }
+    public void setBudgetMax(double budgetMax) { this.budgetMax = budgetMax; }
 
-    public String getPhotoUrl() {
-        return photoUrl;
-    }
-    public void setPhotoUrl(String photoUrl) {
-        this.photoUrl = photoUrl;
-    }
+    public String getEquipements() { return equipements; }
+    public void setEquipements(String equipements) { this.equipements = equipements; }
+
+    public String getQuartier() { return quartier; }
+    public void setQuartier(String quartier) { this.quartier = quartier; }
+
+    public String getModeDeVie() { return modeDeVie; }
+    public void setModeDeVie(String modeDeVie) { this.modeDeVie = modeDeVie; }
+
+    public String getNbColocataires() { return nbColocataires; }
+    public void setNbColocataires(String nbColocataires) { this.nbColocataires = nbColocataires; }
+
+    public String getAnimauxAcceptes() { return animauxAcceptes; }
+    public void setAnimauxAcceptes(String animauxAcceptes) { this.animauxAcceptes = animauxAcceptes; }
+
+    public String getProprete() { return proprete; }
+    public void setProprete(String proprete) { this.proprete = proprete; }
+
+    public Double getPourcentageCompatible() { return pourcentageCompatible; }
+    public void setPourcentageCompatible(Double pourcentageCompatible) { this.pourcentageCompatible = pourcentageCompatible; }
+    public void setPourcentageCompatible(double pourcentageCompatible) { this.pourcentageCompatible = pourcentageCompatible; }
+
+    public boolean isFavori() { return isFavori; }
+    public void setFavori(boolean favori) { isFavori = favori; }
 }

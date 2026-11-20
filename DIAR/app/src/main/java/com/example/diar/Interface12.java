@@ -1,132 +1,137 @@
 package com.example.diar;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.widget.ImageButton;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class Interface12 extends AppCompatActivity {
 
     private RecyclerView recyclerViewProfils;
     private ProfilAdapter profilAdapter;
-    private List<Etudiant> profilList;
+    private List<Etudiant> profilList = new ArrayList<>();
     private ImageButton btnBack;
+    private String emailConnecte;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.interface12);
 
-        // 1. Liaison des vues XML
         recyclerViewProfils = findViewById(R.id.recyclerViewProfils);
         btnBack = findViewById(R.id.btnBack);
-
-        // 2. Configuration du RecyclerView
         recyclerViewProfils.setLayoutManager(new LinearLayoutManager(this));
-        profilList = new ArrayList<>();
-        profilAdapter = new ProfilAdapter(profilList);
+
+        emailConnecte = getIntent().getStringExtra("USER_EMAIL");
+        if (emailConnecte == null || emailConnecte.isEmpty()) {
+            emailConnecte = "testtt@gmail.com";
+        }
+
+        profilAdapter = new ProfilAdapter(profilList, etudiant -> {
+            Intent intent = new Intent(Interface12.this, Interface13.class);
+            intent.putExtra("USER_EMAIL", emailConnecte);
+            intent.putExtra("COLOC_ID", etudiant.getId());
+            intent.putExtra("NOM", etudiant.getNomComplet());
+            intent.putExtra("POURCENTAGE", etudiant.getPourcentageCompatible());
+            intent.putExtra("FAC", etudiant.getUniversite());
+            intent.putExtra("AGE", etudiant.getAge());
+            intent.putExtra("BUDGET", etudiant.getBudgetMax());
+            intent.putExtra("VILLE", etudiant.getQuartier());
+            intent.putExtra("MODE", etudiant.getModeDeVie());
+            intent.putExtra("COLOCS", etudiant.getNbColocataires());
+            intent.putExtra("ANIMAUX", etudiant.getAnimauxAcceptes());
+            intent.putExtra("PROPRETE", etudiant.getProprete());
+            intent.putExtra("PHOTO", etudiant.getPhotoUrl());
+            startActivity(intent);
+        });
         recyclerViewProfils.setAdapter(profilAdapter);
 
-        // 3. Gestion du bouton retour
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());
         }
 
-        // 4. Récupération de l'e-mail de l'étudiant connecté transmis par l'Intent
-        String email = getIntent().getStringExtra("USER_EMAIL");
-        if (email == null || email.isEmpty()) {
-            email = "testtt@gmail.com"; // Valeur par défaut de secours pour les tests
-        }
+        chargerCompatibles(emailConnecte);
 
-        // 5. Charger les profils compatibles depuis le serveur Spring Boot
-        chargerProfilsCompatibles(email);
+        // ✅ PLUS DE BARRE ICI, on a tout enlevé
     }
 
-    private void chargerProfilsCompatibles(String email) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (profilAdapter != null) {
+            profilAdapter.notifyDataSetChanged();
+        }
+    }
 
-        executor.execute(() -> {
-            try {
-                // URL de ton endpoint Spring Boot
-                URL url = new URL("http://192.168.1.132:8082/api/etudiants/compatibles?email=" + email);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/json");
+    private void chargerCompatibles(String email) {
+        OkHttpClient client = new OkHttpClient();
+        String url = Config.BASE_URL + "/api/etudiants/compatibles?email=" + email;
 
-                int responseCode = conn.getResponseCode();
-                if (responseCode == 200) {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
-                    StringBuilder response = new StringBuilder();
-                    String responseLine;
-                    while ((responseLine = br.readLine()) != null) {
-                        response.append(responseLine.trim());
-                    }
-                    br.close();
-
-                    // Parsing du tableau JSON reçu du serveur (Format DTO : EtudiantAvecScore)
-                    JSONArray jsonArray = new JSONArray(response.toString());
-                    profilList.clear();
-
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        // 1. Récupération de l'objet global contenant le pourcentage et l'étudiant
-                        JSONObject itemObj = jsonArray.getJSONObject(i);
-
-                        // Récupération du pourcentage calculé par le backend
-                        int pourcentage = itemObj.optInt("pourcentage", 50);
-
-                        // 2. Extraction de l'objet imbriqué "etudiant"
-                        JSONObject obj = itemObj.getJSONObject("etudiant");
-
-                        // Récupération des champs de l'entité Etudiant
-                        String nom = obj.optString("nomComplet", "Étudiant");
-                        String userEmail = obj.optString("email", "");
-                        String universite = obj.optString("universite", "Université de Sousse");
-                        int age = obj.optInt("age", 21);
-                        double budget = obj.optDouble("budgetMax", 300.0);
-                        String quartier = obj.optString("quartier", "Non spécifié");
-                        String modeDeVie = obj.optString("modeDeVie", "");
-                        String nbColocataires = obj.optString("nbColocataires", "");
-                        String proprete = obj.optString("proprete", "");
-                        String animauxAcceptes = obj.optString("animauxAcceptes", "");
-                        String photoUrl = obj.optString("photoUrl", ""); // <-- Récupération de l'URL de la photo
-
-                        Etudiant etudiant = new Etudiant(nom, userEmail, universite, age, budget, modeDeVie, nbColocataires, proprete, animauxAcceptes);
-
-                        // Injection des valeurs complémentaires dans l'objet Etudiant
-                        etudiant.setPourcentage(pourcentage);
-                        etudiant.setQuartier(quartier);
-                        etudiant.setPhotoUrl(photoUrl); // <-- Assignation de la photo
-
-                        profilList.add(etudiant);
-                    }
-                } else {
-                    handler.post(() -> Toast.makeText(this, "Erreur serveur : " + responseCode, Toast.LENGTH_SHORT).show());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                handler.post(() -> Toast.makeText(this, "Erreur de connexion : " + e.getMessage(), Toast.LENGTH_SHORT).show());
+        Request request = new Request.Builder().url(url).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(() -> Toast.makeText(Interface12.this, "Erreur serveur: " + e.getMessage(), Toast.LENGTH_LONG).show());
             }
 
-            // Mise à jour de l'UI sur le thread principal
-            handler.post(() -> profilAdapter.notifyDataSetChanged());
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String json = response.body().string();
+                try {
+                    JSONArray array = new JSONArray(json);
+                    List<Etudiant> nouvelleListe = new ArrayList<>();
+
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+
+                        JSONObject eObj = obj.has("etudiant") ? obj.getJSONObject("etudiant") : obj;
+                        int score = obj.has("pourcentage") ? obj.getInt("pourcentage") : 0;
+
+                        Etudiant e = new Etudiant();
+                        e.setId(eObj.optInt("id", -1));
+                        e.setNomComplet(eObj.optString("nomComplet", ""));
+                        e.setEmail(eObj.optString("email", ""));
+                        e.setUniversite(eObj.optString("universite", ""));
+                        e.setAge(eObj.optInt("age", 0));
+                        e.setBudgetMax(eObj.optDouble("budgetMax", 0));
+                        e.setQuartier(eObj.optString("quartier", ""));
+                        e.setModeDeVie(eObj.optString("modeDeVie", ""));
+                        e.setNbColocataires(eObj.optString("nbColocataires", ""));
+                        e.setAnimauxAcceptes(eObj.optString("animauxAcceptes", ""));
+                        e.setProprete(eObj.optString("proprete", ""));
+                        e.setPhotoUrl(eObj.optString("photoUrl", ""));
+                        e.setPourcentageCompatible((double) score);
+
+                        nouvelleListe.add(e);
+                    }
+
+                    runOnUiThread(() -> {
+                        profilList.clear();
+                        profilList.addAll(nouvelleListe);
+                        profilAdapter.notifyDataSetChanged();
+                        if (nouvelleListe.isEmpty()) {
+                            Toast.makeText(Interface12.this, "Aucun profil compatible", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    runOnUiThread(() -> Toast.makeText(Interface12.this, "Erreur parsing: " + ex.getMessage(), Toast.LENGTH_LONG).show());
+                }
+            }
         });
     }
 }

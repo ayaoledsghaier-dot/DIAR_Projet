@@ -1,6 +1,7 @@
-package com.diar.backend_diar.entity; 
+package com.diar.backend_diar.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "etudiants")
@@ -15,6 +16,7 @@ public class Etudiant {
     @Column(unique = true)
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String motDePasse;
 
     private String genre;
@@ -22,6 +24,9 @@ public class Etudiant {
     private String niveau;
     private String photoUrl;
     private String statutVerification; // Champ ajouté pour l'OCR
+
+    // 🆕 CHAMP AGE AJOUTÉ - Interface 5
+    private Integer age;
 
     // Nouveaux champs pour les préférences de logement
     private String typeLogement;
@@ -36,6 +41,10 @@ public class Etudiant {
     private String animauxAcceptes;
     private String proprete;
 
+    // ✅ ✅ ✅ SEUL AJOUT : Pourcentage compatible - Interface 12 / 13
+    @Transient
+    private Double pourcentageCompatible;
+
     public Etudiant() {
     }
 
@@ -48,6 +57,19 @@ public class Etudiant {
         this.universite = universite;
         this.niveau = niveau;
         this.photoUrl = photoUrl;
+    }
+
+    // 🆕 Constructeur avec age
+    public Etudiant(String nomComplet, String email, String motDePasse, String genre, String universite, String niveau,
+            String photoUrl, Integer age) {
+        this.nomComplet = nomComplet;
+        this.email = email;
+        this.motDePasse = motDePasse;
+        this.genre = genre;
+        this.universite = universite;
+        this.niveau = niveau;
+        this.photoUrl = photoUrl;
+        this.age = age;
     }
 
     public Long getId() {
@@ -122,6 +144,17 @@ public class Etudiant {
         this.statutVerification = statutVerification;
     }
 
+    // ==========================================
+    // 🆕 GETTER / SETTER POUR AGE
+    // ==========================================
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
     // Getters et Setters pour les préférences de logement
     public String getTypeLogement() {
         return typeLogement;
@@ -139,11 +172,11 @@ public class Etudiant {
         this.locationType = locationType;
     }
 
-    public double getBudgetMax() {
+    public Double getBudgetMax() {
         return budgetMax;
     }
 
-    public void setBudgetMax(double budgetMax) {
+    public void setBudgetMax(Double budgetMax) {
         this.budgetMax = budgetMax;
     }
 
@@ -164,7 +197,7 @@ public class Etudiant {
     }
 
     // ==========================================
-    // GETTERS ET SETTERS AJOUTÉS POUR LE PROFIL COLOCATAIRE
+    // GETTERS ET SETTERS POUR LE PROFIL COLOCATAIRE
     // ==========================================
     public String getModeDeVie() {
         return modeDeVie;
@@ -190,12 +223,22 @@ public class Etudiant {
         this.animauxAcceptes = animauxAcceptes;
     }
 
-    // Ajoute les getters et setters correspondants
     public String getProprete() {
         return proprete;
     }
 
     public void setProprete(String proprete) {
         this.proprete = proprete;
+    }
+
+    // ==========================================
+    // ✅ SEUL AJOUT : GETTER / SETTER POUR POURCENTAGE
+    // ==========================================
+    public Double getPourcentageCompatible() {
+        return pourcentageCompatible;
+    }
+
+    public void setPourcentageCompatible(Double pourcentageCompatible) {
+        this.pourcentageCompatible = pourcentageCompatible;
     }
 }

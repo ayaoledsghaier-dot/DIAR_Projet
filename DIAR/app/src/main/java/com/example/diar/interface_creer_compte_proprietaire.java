@@ -22,7 +22,7 @@ public class interface_creer_compte_proprietaire
         extends AppCompatActivity {
 
     // Correction : On retire le slash final pour éviter les doubles slashs dans les URL
-    private static final String BASE_URL = "http://10.0.2.2:8083";
+    private static final String BASE_URL = Config.BASE_URL + "";
 
     private ImageView imageView;
     private Uri imageUri;

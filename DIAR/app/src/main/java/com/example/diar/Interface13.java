@@ -1,36 +1,38 @@
 package com.example.diar;
 
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.widget.ImageButton;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
-import com.google.android.material.imageview.ShapeableImageView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.IOException;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class Interface13 extends AppCompatActivity {
 
-    private ImageButton btnBack;
-    private ShapeableImageView imgProfile; // Déclaration de l'image de profil
     private TextView tvName, tvMatchPercentage, tvUniversiteAge, tvBudget, tvLocalisation;
-    private ChipGroup chipGroupModeDeVie, chipGroupPreferences;
-    private MaterialButton btnContact;
+    private ViewGroup chipGroupModeDeVie, chipGroupPreferences;
+    private ImageView imgProfile;
+
+    private String emailConnecte;
+    private int colocId = -1; // ✅ UNE SEULE FOIS, pas de doublon
+    private OkHttpClient client = new OkHttpClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.interface13);
 
-        // 1. Liaison des vues XML
-        btnBack = findViewById(R.id.btnBack);
-        imgProfile = findViewById(R.id.imgProfile); // Liaison de l'ImageView
         tvName = findViewById(R.id.tvName);
         tvMatchPercentage = findViewById(R.id.tvMatchPercentage);
         tvUniversiteAge = findViewById(R.id.tvUniversiteAge);
@@ -38,109 +40,153 @@ public class Interface13 extends AppCompatActivity {
         tvLocalisation = findViewById(R.id.tvLocalisation);
         chipGroupModeDeVie = findViewById(R.id.chipGroupModeDeVie);
         chipGroupPreferences = findViewById(R.id.chipGroupPreferences);
-        btnContact = findViewById(R.id.btnContact);
+        imgProfile = findViewById(R.id.imgProfile);
 
-        // 2. Gestion du bouton Retour
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
+        emailConnecte = getIntent().getStringExtra("USER_EMAIL");
+        colocId = getIntent().getIntExtra("COLOC_ID", -1);
 
-        // 3. Récupération des données envoyées par l'Intent
         String nom = getIntent().getStringExtra("NOM");
-        int pourcentage = getIntent().getIntExtra("POURCENTAGE", 0);
-        String universite = getIntent().getStringExtra("UNIVERSITE");
-        int age = getIntent().getIntExtra("AGE", 21);
-        double budget = getIntent().getDoubleExtra("BUDGET", 0.0);
-        String quartier = getIntent().getStringExtra("QUARTIER");
-        String modeDeVie = getIntent().getStringExtra("MODE_DE_VIE");
-        String proprete = getIntent().getStringExtra("PROPRETE");
-        String animaux = getIntent().getStringExtra("ANIMAUX");
-        String photoUrl = getIntent().getStringExtra("PHOTO_URL"); // Récupération de l'URL de la photo
-
-        // 4. Injection dans les TextViews et affichage de la photo
-        if (tvName != null) {
-            tvName.setText(nom != null ? nom : "Nom indisponible");
+        if (nom != null) {
+            afficherDepuisExtras();
+        }
+        else if (colocId != -1) {
+            chargerInfosParId();
+            chargerPourcentage();
         }
 
-        if (tvMatchPercentage != null) {
-            tvMatchPercentage.setText("✿ " + pourcentage + "% compatible");
-        }
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
-        if (tvUniversiteAge != null) {
-            String univ = (universite != null && !universite.isEmpty()) ? universite : "Université";
-            tvUniversiteAge.setText(univ + "  •  " + age + " ans");
-        }
+        findViewById(R.id.btnContact).setOnClickListener(v -> {
+            String n = tvName.getText() != null ? tvName.getText().toString() : "";
+            Toast.makeText(this, "Contacter " + n, Toast.LENGTH_SHORT).show();
+        });
+    }
 
-        if (tvBudget != null) {
-            tvBudget.setText("Budget : " + budget + " DT");
-        }
-
-        if (tvLocalisation != null) {
-            tvLocalisation.setText(quartier != null ? quartier : "Non spécifié");
-        }
-
-        // Chargement de la photo de l'étudiant via Glide
-        if (imgProfile != null && photoUrl != null && !photoUrl.isEmpty()) {
+    private void chargerPhoto(String photoUrl) {
+        if (photoUrl != null && !photoUrl.isEmpty() && !photoUrl.equals("null")) {
+            String urlComplete = Config.BASE_URL + photoUrl;
             Glide.with(this)
-                    .load(photoUrl)
-                    .placeholder(R.drawable.coloc) // Image par défaut pendant le chargement
-                    .error(R.drawable.coloc)       // Image par défaut en cas d'erreur
+                    .load(urlComplete)
+                    .placeholder(R.drawable.ic_profile)
+                    .error(R.drawable.ic_profile)
+                    .circleCrop()
                     .into(imgProfile);
+        } else {
+            imgProfile.setImageResource(R.drawable.ic_profile);
         }
+    }
 
-        // 5. Injection dynamique du Mode de vie (avec conservation du style et des couleurs du XML)
-        if (chipGroupModeDeVie != null) {
-            chipGroupModeDeVie.removeAllViews(); // Supprime les chips statiques du XML
-            if (modeDeVie != null && !modeDeVie.isEmpty()) {
-                String[] elements = modeDeVie.split(",");
-                for (String element : elements) {
-                    Chip chip = new Chip(this);
-                    chip.setText(element.trim());
+    private void afficherDepuisExtras() {
+        String nom = getIntent().getStringExtra("NOM");
+        double pourcentage = getIntent().getDoubleExtra("POURCENTAGE", 0);
+        String fac = getIntent().getStringExtra("FAC");
+        int age = getIntent().getIntExtra("AGE", 0);
+        double budget = getIntent().getDoubleExtra("BUDGET", 0);
+        String ville = getIntent().getStringExtra("VILLE");
+        String mode = getIntent().getStringExtra("MODE");
+        String colocs = getIntent().getStringExtra("COLOCS");
+        String animaux = getIntent().getStringExtra("ANIMAUX");
+        String proprete = getIntent().getStringExtra("PROPRETE");
+        String photo = getIntent().getStringExtra("PHOTO");
 
-                    // Forcer les couleurs et le style harmonisés (Correction du multiplicateur *)
-                    chip.setChipBackgroundColor(ColorStateList.valueOf(Color.parseColor("#F1F5F9")));
-                    chip.setTextColor(Color.parseColor("#475569"));
-                    chip.setChipCornerRadius(getResources().getDisplayMetrics().density * 18);
+        if (nom != null) tvName.setText(nom);
+        tvMatchPercentage.setText((int) pourcentage + "% compatible");
+        tvUniversiteAge.setText(fac + "  •  " + age + " ans");
+        tvBudget.setText("Budget : " + (int) budget + " DT");
+        if (ville != null) tvLocalisation.setText(ville);
+        chargerPhoto(photo);
 
-                    chipGroupModeDeVie.addView(chip);
-                }
+        if (chipGroupModeDeVie.getChildCount() > 0 && mode != null) {
+            TextView chip1 = (TextView) chipGroupModeDeVie.getChildAt(0);
+            chip1.setText(mode);
+        }
+        if (chipGroupPreferences.getChildCount() > 0 && colocs != null) {
+            TextView c1 = (TextView) chipGroupPreferences.getChildAt(0);
+            c1.setText("Colocataire(s) : " + colocs);
+        }
+        if (chipGroupPreferences.getChildCount() > 1 && animaux != null) {
+            TextView c2 = (TextView) chipGroupPreferences.getChildAt(1);
+            c2.setText("Animaux : " + animaux);
+        }
+        if (chipGroupPreferences.getChildCount() > 2 && proprete != null) {
+            TextView c3 = (TextView) chipGroupPreferences.getChildAt(2);
+            c3.setText("Propreté : " + proprete);
+        }
+    }
+
+    private void chargerInfosParId() {
+        Request req = new Request.Builder()
+                .url(Config.BASE_URL + "/api/etudiants/" + colocId)
+                .build();
+
+        client.newCall(req).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {}
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) return;
+                String json = response.body().string();
+                try {
+                    JSONObject obj = new JSONObject(json);
+                    runOnUiThread(() -> {
+                        String nom = obj.optString("nomComplet", "...");
+                        String fac = obj.optString("universite", "...");
+                        String ageStr = obj.optString("age", "0");
+                        String ville = obj.optString("quartier", "...");
+                        double budget = obj.optDouble("budgetMax", 0);
+
+                        String mode = obj.optString("modeDeVie", "...");
+                        String colocs = obj.optString("nbColocataires", "...");
+                        String animaux = obj.optString("animauxAcceptes", "...");
+                        String proprete = obj.optString("proprete", "...");
+                        String photoUrl = obj.optString("photoUrl", "");
+
+                        tvName.setText(nom);
+                        tvUniversiteAge.setText(fac + "  •  " + ageStr + " ans");
+                        tvBudget.setText("Budget : " + (int) budget + " DT");
+                        tvLocalisation.setText(ville);
+                        chargerPhoto(photoUrl);
+
+                        if (chipGroupModeDeVie.getChildCount() > 0) {
+                            ((TextView) chipGroupModeDeVie.getChildAt(0)).setText(mode);
+                        }
+                        if (chipGroupPreferences.getChildCount() > 0) {
+                            ((TextView) chipGroupPreferences.getChildAt(0)).setText("Colocataire(s) : " + colocs);
+                        }
+                        if (chipGroupPreferences.getChildCount() > 1) {
+                            ((TextView) chipGroupPreferences.getChildAt(1)).setText("Animaux : " + animaux);
+                        }
+                        if (chipGroupPreferences.getChildCount() > 2) {
+                            ((TextView) chipGroupPreferences.getChildAt(2)).setText("Propreté : " + proprete);
+                        }
+                    });
+                } catch (Exception e) { e.printStackTrace(); }
             }
-        }
+        });
+    }
 
-        // 6. Injection dynamique des Préférences (Propreté + Animaux)
-        if (chipGroupPreferences != null) {
-            chipGroupPreferences.removeAllViews(); // Supprime les chips statiques du XML
+    private void chargerPourcentage() {
+        if (emailConnecte == null) return;
+        Request req = new Request.Builder()
+                .url(Config.BASE_URL + "/api/etudiants/compatibles?email=" + emailConnecte)
+                .build();
 
-            // Ajout du chip Propreté
-            if (proprete != null && !proprete.isEmpty()) {
-                Chip chipProprete = new Chip(this);
-                chipProprete.setText("Propreté : " + proprete.trim());
-
-                chipProprete.setChipBackgroundColor(ColorStateList.valueOf(Color.parseColor("#F1F5F9")));
-                chipProprete.setTextColor(Color.parseColor("#475569"));
-                chipProprete.setChipCornerRadius(getResources().getDisplayMetrics().density * 18);
-
-                chipGroupPreferences.addView(chipProprete);
+        client.newCall(req).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {}
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) return;
+                String json = response.body().string();
+                try {
+                    JSONArray arr = new JSONArray(json);
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject o = arr.getJSONObject(i);
+                        JSONObject etu = o.getJSONObject("etudiant");
+                        if (etu.getInt("id") == colocId) {
+                            int pct = o.getInt("pourcentage");
+                            runOnUiThread(() -> tvMatchPercentage.setText(pct + "% compatible"));
+                            break;
+                        }
+                    }
+                } catch (Exception e) { e.printStackTrace(); }
             }
-
-            // Ajout du chip Animaux
-            if (animaux != null && !animaux.isEmpty()) {
-                Chip chipAnimaux = new Chip(this);
-                chipAnimaux.setText("Animaux : " + animaux.trim());
-
-                chipAnimaux.setChipBackgroundColor(ColorStateList.valueOf(Color.parseColor("#F1F5F9")));
-                chipAnimaux.setTextColor(Color.parseColor("#475569"));
-                chipAnimaux.setChipCornerRadius(getResources().getDisplayMetrics().density * 18);
-
-                chipGroupPreferences.addView(chipAnimaux);
-            }
-        }
-
-        // 7. Gestion du bouton "Contacter"
-        if (btnContact != null) {
-            btnContact.setOnClickListener(v -> {
-                Toast.makeText(this, "Action Contacter pour " + (nom != null ? nom : "ce profil"), Toast.LENGTH_SHORT).show();
-            });
-        }
+        });
     }
 }

@@ -28,7 +28,7 @@ import java.util.ArrayList;
 
 public class AjouterAnnonce extends AppCompatActivity {
 
-    private static final String BASE_URL = "http://192.168.1.22:8083";
+    private static final String BASE_URL = Config.BASE_URL + "";
     private static final int MAX_PHOTOS = 10;
 
     private EditText etTitre, etDescription, etPrix;

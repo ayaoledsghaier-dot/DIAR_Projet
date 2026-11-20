@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:layout_marginBottom="30dp">
+            android:layout_marginBottom="20dp">
 
             <ImageButton
                 android:id="@+id/btnBack"
@@ -45,7 +45,57 @@
             android:text="Complétez votre profil pour trouver un logement adapté à vos besoins."
             android:textColor="#64748B"
             android:textSize="14sp"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="20dp" />
+
+        <!-- Partie image (cercle) et texte regroupés -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/icon_camera_profil"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Choisir une photo de profil" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Appuyez pour changer la photo"
+                android:textColor="#0D9488"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Champ Âge -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:hint="Âge"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxStrokeColor="#0D9488"
+            app:hintTextColor="#0D9488">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etAge"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:textColor="#1E293B"
+                android:textSize="15sp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Genre -->
         <com.google.android.material.textfield.TextInputLayout
@@ -93,12 +143,35 @@
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Niveau d'étude -->
+        <!-- ✅ NOUVEAU : Fac / Institut - dépend de l'Université choisie -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:hint="Fac / Institut"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxStrokeColor="#0D9488"
+            app:hintTextColor="#0D9488">
+
+            <AutoCompleteTextView
+                android:id="@+id/spinnerFac"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:textColor="#1E293B"
+                android:textSize="15sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Niveau d'étude -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
             android:hint="Niveau d'étude"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
@@ -109,29 +182,6 @@
 
             <AutoCompleteTextView
                 android:id="@+id/spinnerNiveau"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="none"
-                android:textColor="#1E293B"
-                android:textSize="15sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Faculté -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:hint="Faculté / Institut / École"
-            app:boxCornerRadiusBottomEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxStrokeColor="#0D9488"
-            app:hintTextColor="#0D9488">
-
-            <AutoCompleteTextView
-                android:id="@+id/spinnerFaculte"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none"

@@ -50,7 +50,9 @@ dependencies {
     implementation("com.android.volley:volley:1.2.1")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.osmdroid:osmdroid-android:6.1.20")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // 🖼️ Ajout de Glide pour le chargement des photos de profil depuis le serveur
+    // 🖼 Glide pour les images dynamiques des colocs
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 }

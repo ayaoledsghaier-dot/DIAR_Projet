@@ -30,7 +30,7 @@ import org.osmdroid.views.overlay.Marker;
 public class DetailAnnonce extends AppCompatActivity {
 
     private static final String BASE_URL =
-            "http://192.168.1.22:8083";
+            Config.BASE_URL + "";
 
     private ImageView imgDetailAnnonce;
 

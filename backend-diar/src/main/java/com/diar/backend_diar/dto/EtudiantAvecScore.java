@@ -2,6 +2,9 @@ package com.diar.backend_diar.dto;
 
 import com.diar.backend_diar.entity.Etudiant;
 
+
+// DTO qui associe un étudiant à son score de compatibilité (0-100%) calculé avec l'étudiant connecté.
+// Utilisé pour envoyer à Android la liste des profils triés du plus compatible au moins compatible.
 public class EtudiantAvecScore {
     private Etudiant etudiant;
     private int pourcentage;

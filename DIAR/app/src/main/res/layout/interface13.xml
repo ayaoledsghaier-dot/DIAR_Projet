@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <!-- Zone Défilante Principale -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -20,7 +19,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- 1. En-tête : Flèche Retour avec l'image arrow_back -->
+            <!-- 1. En-tête : Flèche Retour + COEUR FAVORI -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
@@ -39,7 +38,7 @@
 
             </RelativeLayout>
 
-            <!-- 2. Photo de Profil + Nom + Pourcentage de Compatibilité -->
+            <!-- 2. Photo de Profil + Nom + Pourcentage -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -52,7 +51,7 @@
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/coloc"
+                    android:src="@drawable/ic_profile"
                     app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
 
                 <TextView
@@ -76,14 +75,13 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- 3. Informations Clés (Université, Âge, Budget, Localisation) -->
+            <!-- 3. Informations Clés -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="28dp"
                 android:orientation="vertical">
 
-                <!-- Université + Âge -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -107,7 +105,6 @@
                         android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- Budget -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -132,7 +129,6 @@
                         android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- Localisation -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -158,7 +154,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- 4. Section : Mode de vie -->
+            <!-- 4. Mode de vie -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -168,7 +164,6 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!-- Badges Mode de vie (Chips) -->
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupModeDeVie"
                 android:layout_width="match_parent"
@@ -218,7 +213,7 @@
                     app:strokeWidth="0dp" />
             </com.google.android.material.chip.ChipGroup>
 
-            <!-- 5. Section : Préférences -->
+            <!-- 5. Préférences -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -228,7 +223,6 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!-- Badges Préférences (Chips) -->
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupPreferences"
                 android:layout_width="match_parent"
@@ -257,7 +251,6 @@
                     app:chipCornerRadius="18dp"
                     app:strokeWidth="0dp" />
 
-                <!-- Ajout de la partie Propreté dans les préférences -->
                 <com.google.android.material.chip.Chip
                     style="@style/Widget.Material3.Chip.Suggestion"
                     android:id="@+id/chipProprete"
@@ -273,7 +266,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- 6. Bouton fixe "Contacter" en bas -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnContact"
         android:layout_width="match_parent"

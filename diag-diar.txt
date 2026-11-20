@@ -1,0 +1,3413 @@
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\interface1.java
+################################################################
+
+package com.example.diar;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+public class interface1 extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.interface1);
+
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            Intent intent = new Intent(interface1.this, Interface3.class);
+            startActivity(intent);
+            finish();
+        }, 3000);
+    }
+}
+
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\Interface4.java
+################################################################
+
+package com.example.diar;
+
+import android.content.Intent;
+import android.os.Bundle;
+
+import com.google.android.material.card.MaterialCardView;
+
+public class Interface4 extends BaseActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.interface4);
+
+        // Activer la barre de navigation
+        setupBottomNavigation();
+
+        // Bouton retour
+        setupBackButton(Interface3.class);
+
+        // Récupérer les deux cartes
+        MaterialCardView cardStudent = findViewById(R.id.cardStudent);
+        MaterialCardView cardOwner = findViewById(R.id.cardOwner);
+
+        // Cliquer sur Étudiant
+        cardStudent.setOnClickListener(v -> {
+            Intent intent = new Intent(Interface4.this,
+                    Interfacecreercompteetudiant.class);
+            startActivity(intent);
+        });
+
+        // Cliquer sur Propriétaire
+        cardOwner.setOnClickListener(v -> {
+            Intent intent = new Intent(Interface4.this,
+                    Interface5.class);
+            startActivity(intent);
+        });
+    }
+}
+
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\Interfacecreercompteetudiant.java
+################################################################
+
+package com.example.diar;
+
+import android.content.Intent;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.util.Patterns;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.button.MaterialButton;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Interfacecreercompteetudiant extends AppCompatActivity {
+
+    private EditText etNomComplet, etEmail, etPassword, etConfirmPassword;
+    private MaterialButton btnCreerCompte;
+    private ImageView imageView;
+
+    private Uri selectedImageUri;
+    private ActivityResultLauncher<String> galleryLauncher;
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.interface_creer_compte_etudiant);
+
+        // Association des composants
+        etNomComplet = findViewById(R.id.etFullName);
+        etEmail = findViewById(R.id.etEmail);
+        etPassword = findViewById(R.id.etPassword);
+        etConfirmPassword = findViewById(R.id.etConfirmPassword);
+        btnCreerCompte = findViewById(R.id.btnSubmit);
+        imageView = findViewById(R.id.imageView);
+
+        // Ouvrir la galerie
+        galleryLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        selectedImageUri = uri;
+                        imageView.setImageURI(uri);
+                        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    }
+                }
+        );
+
+        // Cliquer sur l'image pour choisir une photo
+        imageView.setOnClickListener(v ->
+                galleryLauncher.launch("image/*")
+        );
+
+        // Bouton retour
+        ImageView btnBack = findViewById(R.id.btnBack);
+        // Le bouton retour est un ImageButton dans le XML
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
+
+        btnCreerCompte.setOnClickListener(v -> validerInscription());
+    }
+
+    private void validerInscription() {
+
+        String nom = etNomComplet.getText().toString().trim();
+        String email = etEmail.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+        String confirmPassword = etConfirmPassword.getText().toString().trim();
+
+        resetFieldColors();
+
+        // 1. Champs vides
+        if (nom.isEmpty() && email.isEmpty() &&
+                password.isEmpty() && confirmPassword.isEmpty()) {
+
+            Toast.makeText(this, "Veuillez remplir tous les champs",
+                    Toast.LENGTH_SHORT).show();
+
+            setFieldError(etNomComplet);
+            setFieldError(etEmail);
+            setFieldError(etPassword);
+            setFieldError(etConfirmPassword);
+            return;
+        }
+
+        // 2. Nom complet
+        if (nom.isEmpty()) {
+            Toast.makeText(this, "Veuillez entrer votre nom complet",
+                    Toast.LENGTH_SHORT).show();
+            setFieldError(etNomComplet);
+            etNomComplet.requestFocus();
+            return;
+        }
+
+        int espaceCount = 0;
+
+        for (int i = 0; i < nom.length(); i++) {
+            char c = nom.charAt(i);
+
+            if (c == ' ') {
+                espaceCount++;
+            } else if (!Character.isLetter(c)) {
+                Toast.makeText(this,
+                        "Le nom doit contenir uniquement des lettres",
+                        Toast.LENGTH_LONG).show();
+                setFieldError(etNomComplet);
+                etNomComplet.requestFocus();
+                return;
+            }
+        }
+
+        if (espaceCount < 1 || espaceCount > 2) {
+            Toast.makeText(this,
+                    "Format incorrect ! (1 ou 2 espaces autorisés)",
+                    Toast.LENGTH_LONG).show();
+            setFieldError(etNomComplet);
+            etNomComplet.requestFocus();
+            return;
+        }
+
+        setFieldSuccess(etNomComplet);
+
+        // 3. Email
+        if (email.isEmpty()) {
+            Toast.makeText(this, "Veuillez entrer votre e-mail",
+                    Toast.LENGTH_SHORT).show();
+            setFieldError(etEmail);
+            etEmail.requestFocus();
+            return;
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(this,
+                    "Format d'e-mail invalide",
+                    Toast.LENGTH_LONG).show();
+            setFieldError(etEmail);
+            etEmail.requestFocus();
+            return;
+        }
+
+        setFieldSuccess(etEmail);
+
+        // 4. Mot de passe
+        if (password.isEmpty()) {
+            Toast.makeText(this, "Veuillez entrer votre mot de passe",
+                    Toast.LENGTH_SHORT).show();
+            setFieldError(etPassword);
+            etPassword.requestFocus();
+            return;
+        }
+
+        if (password.length() < 6) {
+            Toast.makeText(this,
+                    "Le mot de passe doit contenir au moins 6 caractères",
+                    Toast.LENGTH_LONG).show();
+            setFieldError(etPassword);
+            etPassword.requestFocus();
+            return;
+        }
+
+        int chiffreCount = 0;
+
+        for (int i = 0; i < password.length(); i++) {
+            if (Character.isDigit(password.charAt(i))) {
+                chiffreCount++;
+            }
+        }
+
+        if (chiffreCount < 3) {
+            Toast.makeText(this,
+                    "Le mot de passe doit contenir au moins 3 chiffres",
+                    Toast.LENGTH_LONG).show();
+            setFieldError(etPassword);
+            etPassword.requestFocus();
+            return;
+        }
+
+        setFieldSuccess(etPassword);
+
+        // 5. Confirmation
+        if (confirmPassword.isEmpty()) {
+            Toast.makeText(this,
+                    "Veuillez confirmer votre mot de passe",
+                    Toast.LENGTH_SHORT).show();
+            setFieldError(etConfirmPassword);
+            etConfirmPassword.requestFocus();
+            return;
+        }
+
+        if (!password.equals(confirmPassword)) {
+            Toast.makeText(this,
+                    "Les mots de passe ne correspondent pas",
+                    Toast.LENGTH_LONG).show();
+            setFieldError(etConfirmPassword);
+            etConfirmPassword.requestFocus();
+            return;
+        }
+
+        setFieldSuccess(etConfirmPassword);
+
+        // 6. Photo de profil
+        if (selectedImageUri == null) {
+            Toast.makeText(this,
+                    "Veuillez choisir une photo de profil",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // 7. Appel API
+        btnCreerCompte.setEnabled(false);
+
+        String emailClean = email.toLowerCase();
+
+        executor.execute(() -> {
+
+            boolean isSuccess = false;
+            String serverMessage = "";
+
+            HttpURLConnection conn = null;
+
+            try {
+                URL url = new URL(Config.BASE_URL + "/api/etudiants");
+
+
+                conn = (HttpURLConnection) url.openConnection();
+
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty(
+                        "Content-Type", "application/json; charset=UTF-8"
+                );
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(15000);
+                conn.setDoOutput(true);
+
+                String jsonInputString =
+                        "{\"nomComplet\":\"" + nom +
+                                "\",\"email\":\"" + emailClean +
+                                "\",\"motDePasse\":\"" + password + "\"}";
+
+                byte[] input = jsonInputString.getBytes("UTF-8");
+
+                conn.setFixedLengthStreamingMode(input.length);
+
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(input);
+                    os.flush();
+                }
+
+                int responseCode = conn.getResponseCode();
+
+                BufferedReader br;
+
+                if (responseCode >= 200 && responseCode < 300) {
+                    isSuccess = true;
+                    br = new BufferedReader(
+                            new InputStreamReader(conn.getInputStream(), "UTF-8")
+                    );
+                } else {
+                    br = new BufferedReader(
+                            new InputStreamReader(conn.getErrorStream(), "UTF-8")
+                    );
+                }
+
+                if (br != null) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+
+                    while ((line = br.readLine()) != null) {
+                        response.append(line);
+                    }
+
+                    serverMessage = response.toString();
+                    br.close();
+                }
+
+                Log.d("InscriptionEtudiant",
+                        "Code: " + responseCode + " | " + serverMessage);
+
+            } catch (Exception e) {
+                Log.e("InscriptionEtudiant", "Erreur API", e);
+                serverMessage = e.getMessage() != null
+                        ? e.getMessage() : "Erreur de connexion";
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
+            }
+
+            final boolean success = isSuccess;
+            final String message = serverMessage;
+
+            handler.post(() -> {
+
+                btnCreerCompte.setEnabled(true);
+
+                if (success) {
+
+                    SessionManager sessionManager = new SessionManager(this);
+                    sessionManager.sauvegarderSession(emailClean, nom);
+
+                    Toast.makeText(this,
+                            "Compte créé avec succès !",
+                            Toast.LENGTH_LONG).show();
+
+                    handler.postDelayed(() -> {
+
+                        Intent intent = new Intent(
+                                Interfacecreercompteetudiant.this,
+                                Interface5.class
+                        );
+
+                        intent.putExtra("USER_EMAIL", emailClean);
+                        intent.putExtra("USER_NAME", nom);
+
+                        startActivity(intent);
+                        finish();
+
+                    }, 2500);
+
+                } else {
+
+                    Toast.makeText(this,
+                            "Erreur : " + message,
+                            Toast.LENGTH_LONG).show();
+                }
+            });
+        });
+    }
+
+    // Couleur rouge en cas d'erreur
+    private void setFieldError(EditText editText) {
+        if (editText != null) {
+            editText.setBackgroundColor(Color.parseColor("#FFCDD2"));
+        }
+    }
+
+    // Couleur verte en cas de succès
+    private void setFieldSuccess(EditText editText) {
+        if (editText != null) {
+            editText.setBackgroundColor(Color.parseColor("#C8E6C9"));
+        }
+    }
+
+    // Réinitialisation des couleurs
+    private void resetFieldColors() {
+        setNeutralField(etNomComplet);
+        setNeutralField(etEmail);
+        setNeutralField(etPassword);
+        setNeutralField(etConfirmPassword);
+    }
+
+    private void setNeutralField(EditText editText) {
+        if (editText != null) {
+            editText.setBackgroundColor(Color.TRANSPARENT);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executor.shutdown();
+    }
+}
+
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\Interfaceverification.java
+################################################################
+package com.example.diar;
+
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.io.OutputStreamWriter;
+
+public class Interfaceverification extends AppCompatActivity {
+
+    private MaterialCardView cardUploadBox;
+    private ImageView ivPreview;
+    private TextView btnBack; // Corrigé en TextView pour correspondre au XML
+    private MaterialButton btnVerify;
+    private String userEmail;
+    private Uri documentUri = null;
+    private File documentFileToSend = null;
+
+    // pour la lecture et vérification de l'attestation
+    private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    documentUri = result.getData().getData();
+                    if (documentUri != null) {
+                        try {
+                            // --- VÉRIFICATION DU TYPE DE FICHIER ---
+                            String mimeType = getContentResolver().getType(documentUri);
+                            if (mimeType == null || mimeType.equals("application/pdf") || !mimeType.startsWith("image/")) {
+                                cardUploadBox.setCardBackgroundColor(Color.parseColor("#FFCDD2")); // Rouge clair
+                                Toast.makeText(this, "Les fichiers PDF et non-images ne sont pas acceptés !", Toast.LENGTH_LONG).show();
+                                documentUri = null;
+                                documentFileToSend = null;
+                                return; // On arrête le traitement ici
+                            }
+                            // ----------------------------------------
+
+                            InputStream imageStream = getContentResolver().openInputStream(documentUri);
+                            BitmapFactory.Options options = new BitmapFactory.Options();
+                            options.inJustDecodeBounds = true;
+                            BitmapFactory.decodeStream(imageStream, null, options);
+                            imageStream.close();
+
+                            int scaleFactor = 1;
+                            int maxHeight = 1024;
+                            int maxWidth = 1024;
+                            if (options.outHeight > maxHeight || options.outWidth > maxWidth) {
+                                final int heightRatio = Math.round((float) options.outHeight / (float) maxHeight);
+                                final int widthRatio = Math.round((float) options.outWidth / (float) maxWidth);
+                                scaleFactor = heightRatio < widthRatio ? heightRatio : widthRatio;
+                            }
+
+                            imageStream = getContentResolver().openInputStream(documentUri);
+                            options.inJustDecodeBounds = false;
+                            options.inSampleSize = scaleFactor;
+                            Bitmap bitmap = BitmapFactory.decodeStream(imageStream, null, options);
+                            imageStream.close();
+
+                            ivPreview.setVisibility(View.VISIBLE);
+                            ivPreview.setImageBitmap(bitmap);
+
+                            documentFileToSend = new File(getCacheDir(), "attestation_temp.jpg");
+                            FileOutputStream fos = new FileOutputStream(documentFileToSend);
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
+                            fos.flush();
+                            fos.close();
+
+                            cardUploadBox.setCardBackgroundColor(Color.parseColor("#C8E6C9")); // Vert clair si succès
+                            Toast.makeText(this, "Attestation prête !", Toast.LENGTH_SHORT).show();
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            cardUploadBox.setCardBackgroundColor(Color.parseColor("#FFCDD2")); // Rouge clair si erreur
+                            Toast.makeText(this, "Erreur lors du traitement de l'image", Toast.LENGTH_SHORT).show();
+                            documentFileToSend = null;
+                        }
+                    }
+                }
+            }
+    );
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.interface_verif_etudiant);
+
+        userEmail = getIntent().getStringExtra("USER_EMAIL");
+        if (userEmail == null || userEmail.isEmpty()) {
+            Toast.makeText(this, "Erreur : E-mail introuvable !", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        cardUploadBox = findViewById(R.id.cardUploadBox);
+        ivPreview = findViewById(R.id.ivPreview);
+        btnVerify = findViewById(R.id.btnVerify);
+        btnBack = findViewById(R.id.btnBack);
+
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
+
+        cardUploadBox.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            galleryLauncher.launch(intent);
+        });
+
+        btnVerify.setOnClickListener(v -> {
+            if (documentFileToSend == null || !documentFileToSend.exists()) {
+                cardUploadBox.setCardBackgroundColor(Color.parseColor("#FFCDD2"));
+                Toast.makeText(this, "Veuillez importer votre attestation", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            Handler handler = new Handler(Looper.getMainLooper());
+
+            executor.execute(() -> {
+                final boolean[] isSuccess = {false};
+                final String[] serverMessage = {""};
+
+                try {
+                    URL url = new URL(Config.BASE_URL + "/api/etudiants/verifier");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setDoOutput(true);
+
+                    String boundary = "Boundary_" + System.currentTimeMillis();
+                    conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+                    OutputStream outputStream = conn.getOutputStream();
+                    PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, "UTF-8"), true);
+
+                    writer.append("--").append(boundary).append("\r\n");
+                    writer.append("Content-Disposition: form-data; name=\"email\"\r\n\r\n");
+                    writer.append(userEmail).append("\r\n");
+
+                    writer.append("--").append(boundary).append("\r\n");
+                    writer.append("Content-Disposition: form-data; name=\"carte\"; filename=\"attestation.jpg\"\r\n");
+                    writer.append("Content-Type: image/jpeg\r\n\r\n");
+                    writer.flush();
+
+                    try (InputStream fileInputStream = new FileInputStream(documentFileToSend)) {
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                            outputStream.write(buffer, 0, bytesRead);
+                        }
+                    }
+                    outputStream.flush();
+                    writer.append("\r\n");
+                    writer.append("--").append(boundary).append("--\r\n");
+                    writer.flush();
+
+                    int responseCode = conn.getResponseCode();
+                    if (responseCode == 200) {
+                        isSuccess[0] = true;
+                    } else {
+                        if (conn.getErrorStream() != null) {
+                            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "utf-8"))) {
+                                StringBuilder response = new StringBuilder();
+                                String line;
+                                while ((line = br.readLine()) != null) {
+                                    response.append(line.trim());
+                                }
+                                serverMessage[0] = response.toString();
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    serverMessage[0] = "Exception : " + e.getMessage();
+                }
+
+                handler.post(() -> {
+                    if (isSuccess[0]) {
+                        Toast.makeText(this, "Vérification réussie avec succès !", Toast.LENGTH_LONG).show();
+
+                        // Délai personnalisé de 2,5 secondes (2500 ms) avant redirection
+                        handler.postDelayed(() -> {
+                            Intent intent = new Intent(Interfaceverification.this, Interface6.class);
+                            // Si vous avez besoin de passer l'email ou d'autres données à l'interface 6 :
+                            // intent.putExtra("USER_EMAIL", userEmail);
+                            startActivity(intent);
+                            finish(); // Ferme l'activité actuelle pour ne pas y revenir en faisant "Retour"
+                        }, 2500);
+
+                    } else {
+                        Toast.makeText(this, "Erreur de vérification : " + serverMessage[0], Toast.LENGTH_LONG).show();
+                    }
+                });
+            });
+        });
+    }
+}
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\Interface5.java
+################################################################
+
+package com.example.diar;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.button.MaterialButton;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Interface5 extends AppCompatActivity {
+
+    private AutoCompleteTextView spinnerGenre;
+    private AutoCompleteTextView spinnerUniversite;
+    private AutoCompleteTextView spinnerNiveau;
+    private AutoCompleteTextView spinnerFaculte;
+
+    private MaterialButton btnSuivant;
+
+    private String userEmail;
+    private String userName;
+
+    private final ExecutorService executor =
+            Executors.newSingleThreadExecutor();
+
+    private final Handler handler =
+            new Handler(Looper.getMainLooper());
+
+    private static final String BASE_URL =
+            Config.BASE_URL + "";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.interface5);
+
+        // Récupération de la session
+        SessionManager sessionManager = new SessionManager(this);
+
+        userEmail = sessionManager.getEmail();
+        userName = sessionManager.getNom();
+
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            userEmail = getIntent().getStringExtra("USER_EMAIL");
+        }
+
+        if (userName == null || userName.trim().isEmpty()) {
+            userName = getIntent().getStringExtra("USER_NAME");
+        }
+
+        // Liaison des composants XML
+        spinnerGenre = findViewById(R.id.spinnerGenre);
+        spinnerUniversite = findViewById(R.id.spinnerUniversite);
+        spinnerNiveau = findViewById(R.id.spinnerNiveau);
+        spinnerFaculte = findViewById(R.id.spinnerFaculte);
+
+        btnSuivant = findViewById(R.id.btnSuivant);
+
+        // Bouton retour
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
+        // Vérification email
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            Toast.makeText(this,
+                    "Email étudiant introuvable. Reconnectez-vous.",
+                    Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
+        setupSpinners();
+
+        btnSuivant.setOnClickListener(v -> enregistrerProfil());
+    }
+
+    // Configuration des listes
+    private void setupSpinners() {
+
+        String[] genres = {
+                "Sélectionnez le genre",
+                "Homme",
+                "Femme"
+        };
+
+        ArrayAdapter<String> adapterGenre = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                genres
+        );
+
+        spinnerGenre.setAdapter(adapterGenre);
+
+        String[] universites = {
+                "Sélectionnez l'université",
+                "Université de Sousse",
+                "Université de Monastir",
+                "Université de Sfax",
+                "Université de Tunis"
+        };
+
+        ArrayAdapter<String> adapterUniversite = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                universites
+        );
+
+        spinnerUniversite.setAdapter(adapterUniversite);
+
+        String[] niveaux = {
+                "Sélectionnez le niveau",
+                "première année",
+                "deuxième année",
+                "troisième année",
+                "Mastère"
+        };
+
+        ArrayAdapter<String> adapterNiveau = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                niveaux
+        );
+
+        spinnerNiveau.setAdapter(adapterNiveau);
+
+        // Faculté désactivée au début
+        spinnerFaculte.setEnabled(false);
+        spinnerFaculte.setText(
+                "Choisissez d'abord une université", false
+        );
+
+        // Changement selon l'université
+        spinnerUniversite.setOnItemClickListener(
+                (parent, view, position, id) -> {
+
+                    String universite =
+                            parent.getItemAtPosition(position).toString();
+
+                    chargerFacultes(universite);
+                }
+        );
+    }
+
+    // Charger les établissements selon l'université
+    private void chargerFacultes(String universite) {
+
+        String[] facultes;
+
+        if (universite.equals("Université de Sousse")) {
+
+            facultes = new String[]{
+                    "Sélectionnez votre établissement",
+                    "Faculté de Médecine de Sousse",
+                    "Faculté de Droit et des Sciences Politiques de Sousse",
+                    "Faculté des Lettres et des Sciences Humaines de Sousse",
+                    "Faculté des Sciences Économiques et de Gestion de Sousse",
+                    "Institut Supérieur de Gestion de Sousse",
+                    "Institut des Hautes Études Commerciales de Sousse",
+                    "Institut Supérieur de Finance et de Fiscalité de Sousse",
+                    "Institut Supérieur d'Informatique et des Technologies de Communication de Hammam Sousse",
+                    "Institut Supérieur du Transport et de la Logistique de Sousse",
+                    "Institut Supérieur des Beaux-Arts de Sousse",
+                    "École Nationale d'Ingénieurs de Sousse",
+                    "École Supérieure des Sciences et Techniques de la Santé de Sousse",
+                    "Institut Supérieur de Musique de Sousse",
+                    "Institut Supérieur des Sciences Appliquées et de Technologie de Sousse",
+                    "Institut Supérieur Agronomique de Chott Meriem",
+                    "Institut Supérieur des Sciences Infirmières de Sousse",
+                    "École Supérieure des Sciences et des Technologies de Hammam Sousse"
+            };
+
+            spinnerFaculte.setEnabled(true);
+
+        } else {
+
+            facultes = new String[]{
+                    "Liste non disponible pour cette université"
+            };
+
+            spinnerFaculte.setEnabled(false);
+        }
+
+        ArrayAdapter<String> adapterFaculte = new ArrayAdapter<>(
+                Interface5.this,
+                android.R.layout.simple_dropdown_item_1line,
+                facultes
+        );
+
+        spinnerFaculte.setAdapter(adapterFaculte);
+
+        spinnerFaculte.setText("", false);
+    }
+
+    // Enregistrement du profil
+    private void enregistrerProfil() {
+
+        String genre = spinnerGenre.getText().toString().trim();
+        String universite = spinnerUniversite.getText().toString().trim();
+        String niveau = spinnerNiveau.getText().toString().trim();
+        String faculte = spinnerFaculte.getText().toString().trim();
+
+        if (genre.isEmpty() ||
+                genre.equals("Sélectionnez le genre")) {
+
+            spinnerGenre.setError("Choisissez votre genre");
+            return;
+        }
+
+        if (universite.isEmpty() ||
+                universite.equals("Sélectionnez l'université")) {
+
+            spinnerUniversite.setError("Choisissez votre université");
+            return;
+        }
+
+        if (niveau.isEmpty() ||
+                niveau.equals("Sélectionnez le niveau")) {
+
+            spinnerNiveau.setError("Choisissez votre niveau");
+            return;
+        }
+
+        // Vérifier la faculté pour Université de Sousse
+        if (universite.equals("Université de Sousse")) {
+
+            if (faculte.isEmpty() ||
+                    faculte.equals("Sélectionnez votre établissement")) {
+
+                spinnerFaculte.setError(
+                        "Choisissez votre faculté ou institut"
+                );
+                return;
+            }
+        } else {
+            faculte = "";
+        }
+
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            Toast.makeText(this,
+                    "Email étudiant manquant",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        btnSuivant.setEnabled(false);
+        btnSuivant.setText("Enregistrement...");
+
+        final String faculteFinale = faculte;
+
+        executor.execute(() -> {
+
+            HttpURLConnection conn = null;
+            String serverMessage = "";
+
+            try {
+
+                URL url = new URL(
+                        BASE_URL + "/api/etudiants/profil"
+                );
+
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(15000);
+
+                String boundary =
+                        "Boundary_" + System.currentTimeMillis();
+
+                conn.setRequestProperty(
+                        "Content-Type",
+                        "multipart/form-data; boundary=" + boundary
+                );
+
+                try (OutputStream outputStream = conn.getOutputStream();
+                     PrintWriter writer = new PrintWriter(
+                             new java.io.OutputStreamWriter(
+                                     outputStream,
+                                     StandardCharsets.UTF_8
+                             ),
+                             true
+                     )) {
+
+                    ajouterChamp(writer, boundary, "email", userEmail);
+                    ajouterChamp(writer, boundary, "genre", genre);
+                    ajouterChamp(writer, boundary, "universite", universite);
+                    ajouterChamp(writer, boundary, "niveau", niveau);
+                    ajouterChamp(writer, boundary, "faculte", faculteFinale);
+
+                    writer.append("--")
+                            .append(boundary)
+                            .append("--\r\n");
+
+                    writer.flush();
+                }
+
+                int responseCode = conn.getResponseCode();
+
+                InputStream responseStream;
+
+                if (responseCode >= 200 && responseCode < 300) {
+                    responseStream = conn.getInputStream();
+                } else {
+                    responseStream = conn.getErrorStream();
+                }
+
+                if (responseStream != null) {
+
+                    StringBuilder response = new StringBuilder();
+
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(
+                                    responseStream,
+                                    StandardCharsets.UTF_8
+                            ))) {
+
+                        String line;
+
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
+                        }
+                    }
+
+                    serverMessage = response.toString();
+                }
+
+                final boolean success =
+                        responseCode >= 200 && responseCode < 300;
+
+                final String finalMessage = serverMessage;
+
+                handler.post(() -> {
+
+                    btnSuivant.setEnabled(true);
+                    btnSuivant.setText("Suivant");
+
+                    if (success) {
+
+                        Toast.makeText(
+                                Interface5.this,
+                                "Profil enregistré avec succès !",
+                                Toast.LENGTH_LONG
+                        ).show();
+
+                        Intent intent = new Intent(
+                                Interface5.this,
+                                Interface6.class
+                        );
+
+                        intent.putExtra("USER_EMAIL", userEmail);
+                        intent.putExtra("USER_NAME", userName);
+
+                        startActivity(intent);
+                        finish();
+
+                    } else {
+
+                        Log.e("Interface5",
+                                "Erreur serveur : " + finalMessage);
+
+                        Toast.makeText(
+                                Interface5.this,
+                                "Erreur d'enregistrement : " + finalMessage,
+                                Toast.LENGTH_LONG
+                        ).show();
+                    }
+                });
+
+            } catch (Exception e) {
+
+                Log.e("Interface5", "Erreur connexion", e);
+
+                handler.post(() -> {
+
+                    btnSuivant.setEnabled(true);
+                    btnSuivant.setText("Suivant");
+
+                    Toast.makeText(
+                            Interface5.this,
+                            "Impossible de contacter le serveur : "
+                                    + e.getMessage(),
+                            Toast.LENGTH_LONG
+                    ).show();
+                });
+
+            } finally {
+
+                if (conn != null) {
+                    conn.disconnect();
+                }
+            }
+        });
+    }
+
+    // Ajouter un champ multipart
+    private void ajouterChamp(
+            PrintWriter writer,
+            String boundary,
+            String nom,
+            String valeur
+    ) throws Exception {
+
+        writer.append("--")
+                .append(boundary)
+                .append("\r\n");
+
+        writer.append(
+                        "Content-Disposition: form-data; name=\""
+                )
+                .append(nom)
+                .append("\"\r\n\r\n");
+
+        writer.append(valeur != null ? valeur : "")
+                .append("\r\n");
+
+        writer.flush();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executor.shutdown();
+        handler.removeCallbacksAndMessages(null);
+    }
+}
+
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\Interface6.java
+################################################################
+
+package com.example.diar;
+
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.checkbox.MaterialCheckBox;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Interface6 extends AppCompatActivity {
+
+    // URL Backend
+    private static final String BASE_URL =
+            Config.BASE_URL + "";
+
+    // Vues UI
+    private ImageButton btnBack;
+    private EditText etBudget;
+    private MaterialButton btnEnregistrer;
+
+    // Types de logement
+    private MaterialCardView cardStudio;
+    private MaterialCardView cardAppartement;
+    private MaterialCardView cardChambre;
+    private MaterialCardView cardMaison;
+
+    private String selectedTypeLogement = null;
+
+    // Type de location
+    private MaterialCardView cardIndividuelle;
+    private MaterialCardView cardColocation;
+
+    private String selectedLocation = null;
+
+    // Équipements
+    private MaterialCheckBox cbWifi;
+    private MaterialCheckBox cbClim;
+    private MaterialCheckBox cbChauffage;
+    private MaterialCheckBox cbCuisine;
+    private MaterialCheckBox cbMachineLaver;
+    private MaterialCheckBox cbParking;
+    private MaterialCheckBox cbSalleDeBain;
+
+    // Quartiers
+    private TextView chipSahloul;
+    private TextView chipKhezema;
+    private TextView chipBouhdima;
+
+    private String selectedQuartier = null;
+
+    // Email étudiant
+    private String userEmail;
+
+    // Empêcher les envois multiples
+    private boolean isSending = false;
+
+    private final ExecutorService executor =
+            Executors.newSingleThreadExecutor();
+
+    private final Handler handler =
+            new Handler(Looper.getMainLooper());
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.interface6);
+
+        // Récupération de l'email
+        SessionManager sessionManager =
+                new SessionManager(this);
+
+        userEmail = sessionManager.getEmail();
+
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            userEmail = getIntent().getStringExtra("USER_EMAIL");
+        }
+
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            Toast.makeText(
+                    this,
+                    "Email étudiant introuvable. Reconnectez-vous.",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            finish();
+            return;
+        }
+
+        userEmail = userEmail.trim();
+
+        initViews();
+        setupListeners();
+    }
+
+    // Initialisation des vues
+    private void initViews() {
+
+        btnBack = findViewById(R.id.btnBack);
+        etBudget = findViewById(R.id.etBudget);
+        btnEnregistrer = findViewById(R.id.btnEnregistrer);
+
+        // Types de logement
+        cardStudio = findViewById(R.id.cardStudio);
+        cardAppartement = findViewById(R.id.cardAppartement);
+        cardChambre = findViewById(R.id.cardChambre);
+        cardMaison = findViewById(R.id.cardMaison);
+
+        // Location
+        cardIndividuelle = findViewById(R.id.cardIndividuelle);
+        cardColocation = findViewById(R.id.cardColocation);
+
+        // Équipements
+        cbWifi = findViewById(R.id.cbWifi);
+        cbClim = findViewById(R.id.cbClim);
+        cbChauffage = findViewById(R.id.cbChauffage);
+        cbCuisine = findViewById(R.id.cbCuisine);
+        cbMachineLaver = findViewById(R.id.cbMachineLaver);
+        cbParking = findViewById(R.id.cbParking);
+        cbSalleDeBain = findViewById(R.id.cbSalleDeBain);
+
+        // Quartiers
+        chipSahloul = findViewById(R.id.chipSahloul);
+        chipKhezema = findViewById(R.id.chipKhezema);
+        chipBouhdima = findViewById(R.id.chipBouhdima);
+    }
+
+    // Gestion des clics
+    private void setupListeners() {
+
+        btnBack.setOnClickListener(v -> finish());
+
+        // Types de logement
+        cardStudio.setOnClickListener(v ->
+                selectTypeLogement(cardStudio, "Studio"));
+
+        cardAppartement.setOnClickListener(v ->
+                selectTypeLogement(cardAppartement, "Appartement"));
+
+        cardChambre.setOnClickListener(v ->
+                selectTypeLogement(cardChambre, "Chambre"));
+
+        cardMaison.setOnClickListener(v ->
+                selectTypeLogement(cardMaison, "Maison"));
+
+        // Types de location
+        cardIndividuelle.setOnClickListener(v ->
+                selectLocationType(cardIndividuelle, "Individuelle"));
+
+        cardColocation.setOnClickListener(v ->
+                selectLocationType(cardColocation, "Colocation"));
+
+        // Quartiers
+        chipSahloul.setOnClickListener(v ->
+                selectQuartier(chipSahloul, "Sahloul"));
+
+        chipKhezema.setOnClickListener(v ->
+                selectQuartier(chipKhezema, "Khezema"));
+
+        chipBouhdima.setOnClickListener(v ->
+                selectQuartier(chipBouhdima, "Bouhdima"));
+
+        // Enregistrer
+        btnEnregistrer.setOnClickListener(v ->
+                validerEtEnvoyer());
+    }
+
+    // Sélection du type de logement
+    private void selectTypeLogement(
+            MaterialCardView selectedCard,
+            String type) {
+
+        selectedTypeLogement = type;
+
+        MaterialCardView[] cards = {
+                cardStudio,
+                cardAppartement,
+                cardChambre,
+                cardMaison
+        };
+
+        for (MaterialCardView card : cards) {
+
+            if (card == selectedCard) {
+
+                int strokeWidth = (int)
+                        (2 * getResources().getDisplayMetrics().density);
+
+                card.setStrokeWidth(strokeWidth);
+
+                card.setStrokeColor(
+                        Color.parseColor("#86EFAC"));
+
+                card.setCardBackgroundColor(
+                        Color.parseColor("#E6F4EA"));
+
+            } else {
+
+                card.setStrokeWidth(0);
+
+                card.setCardBackgroundColor(
+                        Color.parseColor("#F8FAFC"));
+            }
+        }
+    }
+
+    // Sélection du type de location
+    private void selectLocationType(
+            MaterialCardView selectedCard,
+            String location) {
+
+        selectedLocation = location;
+
+        MaterialCardView[] cards = {
+                cardIndividuelle,
+                cardColocation
+        };
+
+        for (MaterialCardView card : cards) {
+
+            if (card == selectedCard) {
+
+                card.setStrokeWidth(
+                        (int) (2 * getResources()
+                                .getDisplayMetrics().density));
+
+                card.setStrokeColor(
+                        Color.parseColor("#86EFAC"));
+
+                card.setCardBackgroundColor(
+                        Color.parseColor("#E6F4EA"));
+
+            } else {
+
+                card.setStrokeWidth(0);
+
+                card.setCardBackgroundColor(
+                        Color.parseColor("#F8FAFC"));
+            }
+        }
+    }
+
+    // Sélection du quartier
+    private void selectQuartier(
+            TextView selectedChip,
+            String quartier) {
+
+        selectedQuartier = quartier;
+
+        TextView[] chips = {
+                chipSahloul,
+                chipKhezema,
+                chipBouhdima
+        };
+
+        for (TextView chip : chips) {
+
+            if (chip == selectedChip) {
+
+                chip.setBackgroundResource(
+                        R.drawable.bg_chip_selected);
+
+                chip.setTextColor(Color.BLACK);
+
+            } else {
+
+                chip.setBackgroundResource(
+                        R.drawable.bg_chip_unselected);
+
+                chip.setTextColor(
+                        Color.parseColor("#64748B"));
+            }
+        }
+    }
+
+    // Validation des données
+    private void validerEtEnvoyer() {
+
+        if (isSending) {
+            return;
+        }
+
+        // Type logement
+        if (selectedTypeLogement == null) {
+
+            Toast.makeText(
+                    this,
+                    "Veuillez sélectionner un type de logement",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        // Type location
+        if (selectedLocation == null) {
+
+            Toast.makeText(
+                    this,
+                    "Veuillez sélectionner un type de location",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        // Budget
+        String budgetStr =
+                etBudget.getText().toString().trim();
+
+        if (budgetStr.isEmpty()) {
+
+            etBudget.setError(
+                    "Veuillez saisir votre budget maximal");
+
+            etBudget.requestFocus();
+            return;
+        }
+
+        double budgetMax;
+
+        try {
+
+            budgetMax = Double.parseDouble(
+                    budgetStr.replace(",", "."));
+
+        } catch (NumberFormatException e) {
+
+            etBudget.setError("Format de budget invalide");
+            etBudget.requestFocus();
+            return;
+        }
+
+        if (budgetMax <= 0 || budgetMax > 500) {
+
+            etBudget.setError(
+                    "Le budget doit être entre 1 et 500 DT");
+
+            etBudget.requestFocus();
+
+            Toast.makeText(
+                    this,
+                    "Le budget maximal autorisé est de 500 DT",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        // Équipements
+        StringBuilder equipementsList =
+                new StringBuilder();
+
+        if (cbWifi.isChecked())
+            equipementsList.append("Wi-Fi, ");
+
+        if (cbClim.isChecked())
+            equipementsList.append("Climatisation, ");
+
+        if (cbChauffage.isChecked())
+            equipementsList.append("Chauffage, ");
+
+        if (cbCuisine.isChecked())
+            equipementsList.append("Cuisine équipée, ");
+
+        if (cbMachineLaver.isChecked())
+            equipementsList.append("Machine à laver, ");
+
+        if (cbParking.isChecked())
+            equipementsList.append("Parking, ");
+
+        if (cbSalleDeBain.isChecked())
+            equipementsList.append("Salle de bain privée, ");
+
+        if (equipementsList.length() == 0) {
+
+            Toast.makeText(
+                    this,
+                    "Veuillez sélectionner au moins un équipement",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        String equipementsFinal =
+                equipementsList.toString().trim();
+
+        if (equipementsFinal.endsWith(",")) {
+
+            equipementsFinal =
+                    equipementsFinal.substring(
+                            0,
+                            equipementsFinal.length() - 1
+                    ).trim();
+        }
+
+        // Quartier
+        if (selectedQuartier == null) {
+
+            Toast.makeText(
+                    this,
+                    "Veuillez sélectionner un quartier préféré",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        // Email
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+
+            Toast.makeText(
+                    this,
+                    "Email étudiant introuvable",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        // Envoi vers backend
+        envoyerVersServeur(
+                userEmail,
+                selectedTypeLogement,
+                selectedLocation,
+                budgetMax,
+                equipementsFinal,
+                selectedQuartier
+        );
+    }
+
+    // Enregistrement des préférences dans Spring Boot
+    private void envoyerVersServeur(
+            String email,
+            String typeLogement,
+            String location,
+            double budget,
+            String equipements,
+            String quartier) {
+
+        if (isSending) return;
+
+        isSending = true;
+
+        btnEnregistrer.setEnabled(false);
+        btnEnregistrer.setText("Enregistrement...");
+
+        executor.execute(() -> {
+
+            HttpURLConnection conn = null;
+
+            boolean success = false;
+            String serverMessage = "";
+
+            try {
+
+                URL url = new URL(
+                        BASE_URL + "/api/etudiants/preferences");
+
+                conn = (HttpURLConnection)
+                        url.openConnection();
+
+                conn.setRequestMethod("POST");
+
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(15000);
+
+                conn.setDoOutput(true);
+
+                conn.setRequestProperty(
+                        "Content-Type",
+                        "application/x-www-form-urlencoded; charset=UTF-8"
+                );
+
+                String params =
+                        "email=" + URLEncoder.encode(email, "UTF-8") +
+                                "&typeLogement=" + URLEncoder.encode(typeLogement, "UTF-8") +
+                                "&locationType=" + URLEncoder.encode(location, "UTF-8") +
+                                "&budgetMax=" + budget +
+                                "&equipements=" + URLEncoder.encode(equipements, "UTF-8") +
+                                "&quartier=" + URLEncoder.encode(quartier, "UTF-8");
+
+                try (OutputStream os = conn.getOutputStream()) {
+
+                    os.write(params.getBytes("UTF-8"));
+                    os.flush();
+                }
+
+                int responseCode = conn.getResponseCode();
+
+                InputStream responseStream;
+
+                if (responseCode >= 200 && responseCode < 300) {
+
+                    responseStream = conn.getInputStream();
+
+                } else {
+
+                    responseStream = conn.getErrorStream();
+                }
+
+                if (responseStream != null) {
+
+                    StringBuilder response =
+                            new StringBuilder();
+
+                    try (BufferedReader reader =
+                                 new BufferedReader(
+                                         new InputStreamReader(
+                                                 responseStream,
+                                                 "UTF-8"
+                                         ))) {
+
+                        String line;
+
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
+                        }
+                    }
+
+                    serverMessage = response.toString();
+                }
+
+                success =
+                        responseCode >= 200 &&
+                                responseCode < 300;
+
+            } catch (Exception e) {
+
+                Log.e(
+                        "Interface6",
+                        "Erreur connexion serveur",
+                        e
+                );
+
+                serverMessage = e.getMessage();
+
+            } finally {
+
+                if (conn != null) {
+                    conn.disconnect();
+                }
+            }
+
+            final boolean finalSuccess = success;
+            final String finalMessage = serverMessage;
+
+            handler.post(() -> {
+
+                isSending = false;
+
+                btnEnregistrer.setEnabled(true);
+                btnEnregistrer.setText("Enregistrer");
+
+                if (finalSuccess) {
+
+                    Toast.makeText(
+                            Interface6.this,
+                            "Préférences enregistrées avec succès !",
+                            Toast.LENGTH_LONG
+                    ).show();
+
+                    // Ouvrir l'interface de vérification
+                    Intent intent = new Intent(
+                            Interface6.this,
+                            Interfaceverification.class
+                    );
+
+                    intent.putExtra(
+                            "USER_EMAIL",
+                            email
+                    );
+
+                    startActivity(intent);
+
+                    finish();
+
+                } else {
+
+                    Log.e(
+                            "Interface6",
+                            "Erreur serveur : " + finalMessage
+                    );
+
+                    Toast.makeText(
+                            Interface6.this,
+                            "Erreur : " + finalMessage,
+                            Toast.LENGTH_LONG
+                    ).show();
+                }
+            });
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        handler.removeCallbacksAndMessages(null);
+        executor.shutdown();
+    }
+}
+
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\Interface7.java
+################################################################
+package com.example.diar;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Interface7 extends AppCompatActivity {
+
+    private TextView tvBonjour, tvUniversite;
+    private ImageView ivUserPhoto;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.interface7);
+
+        // Liaison des vues XML
+        tvBonjour = findViewById(R.id.tvBonjour);
+        tvUniversite = findViewById(R.id.tvUniversite);
+        ivUserPhoto = findViewById(R.id.ivUserPhoto);
+
+        // Récupération directe et globale de l'e-mail du compte connecté
+        SessionManager sessionManager = new SessionManager(this);
+        String email = sessionManager.getEmail();
+
+        android.util.Log.d("DEBUG_EMAIL", "E-mail récupéré de la session : " + email);
+
+        if (email != null && !email.trim().isEmpty()) {
+            chargerDonneesUtilisateur(email.trim());
+        } else {
+            tvBonjour.setText("Erreur : Aucun utilisateur connecté 👋");
+        }
+    }
+
+    private void chargerDonneesUtilisateur(String email) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        final String[] nomUtilisateur = {"Utilisateur"};
+        final String[] universiteUtilisateur = {"Université de Sousse"};
+        final String[] photoUrl = {null}; // Initialisé à null proprement
+        final boolean[] success = {false};
+
+        executor.execute(() -> {
+            try {
+                // 1. Récupération du profil JSON
+                URL url = new URL(Config.BASE_URL + "/api/etudiants/profil?email=" + URLEncoder.encode(email, "UTF-8"));
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Accept", "application/json");
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                    br.close();
+
+                    JSONObject jsonObject = new JSONObject(response.toString());
+
+                    if (jsonObject.has("nomComplet") && !jsonObject.isNull("nomComplet")) {
+                        nomUtilisateur[0] = jsonObject.getString("nomComplet");
+                    }
+                    if (jsonObject.has("universite") && !jsonObject.isNull("universite")) {
+                        universiteUtilisateur[0] = jsonObject.getString("universite");
+                    }
+                    if (jsonObject.has("photoUrl") && !jsonObject.isNull("photoUrl")) {
+                        photoUrl[0] = jsonObject.getString("photoUrl");
+                        android.util.Log.d("DEBUG_PHOTO", "Nom du fichier trouvé en BDD : " + photoUrl[0]);
+                    } else {
+                        android.util.Log.d("DEBUG_PHOTO", "Le champ photoUrl est vide ou null dans le JSON !");
+                    }
+
+                    success[0] = true;
+                } else {
+                    android.util.Log.e("DEBUG_PHOTO", "Erreur HTTP : " + responseCode);
+                }
+            } catch (Exception e) {
+                android.util.Log.e("DEBUG_PHOTO", "Erreur lors de l'appel profil : " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            // 2. Téléchargement de l'image si le nom du fichier existe
+            Bitmap bitmapPhoto = null;
+            if (success[0] && photoUrl[0] != null && !photoUrl[0].trim().isEmpty()) {
+                try {
+                    String imageUrl = Config.BASE_URL + "/uploads/" + photoUrl[0];
+                    android.util.Log.d("DEBUG_PHOTO", "Tentative de téléchargement de l'image : " + imageUrl);
+
+                    URL imageConnectionUrl = new URL(imageUrl);
+                    InputStream inputStream = (InputStream) imageConnectionUrl.getContent();
+                    bitmapPhoto = BitmapFactory.decodeStream(inputStream);
+
+                    if (bitmapPhoto != null) {
+                        android.util.Log.d("DEBUG_PHOTO", "Image téléchargée et décodée avec succès !");
+                    } else {
+                        android.util.Log.d("DEBUG_PHOTO", "Le Bitmap décodé est null (flux invalide)");
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DEBUG_PHOTO", "Erreur lors du téléchargement de l'image : " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+
+            final Bitmap finalBitmap = bitmapPhoto;
+
+            // 3. Mise à jour de l'interface graphique sur le thread principal
+            handler.post(() -> {
+                if (success[0]) {
+                    tvBonjour.setText("Bonjour " + nomUtilisateur[0] + " 👋");
+                    tvUniversite.setText(universiteUtilisateur[0]);
+
+                    if (finalBitmap != null) {
+                        ivUserPhoto.setImageBitmap(finalBitmap);
+                        android.util.Log.d("DEBUG_PHOTO", "Photo appliquée avec succès dans l'interface !");
+                    } else {
+                        android.util.Log.d("DEBUG_PHOTO", "Aucune photo valide à afficher, conservation de l'image par défaut.");
+                    }
+                } else {
+                    tvBonjour.setText("Erreur de chargement 👋");
+                }
+            });
+        });
+    }
+}
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\Interface12.java
+################################################################
+package com.example.diar;
+
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.ImageButton;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Interface12 extends AppCompatActivity {
+
+    private RecyclerView recyclerViewProfils;
+    private ProfilAdapter profilAdapter;
+    private List<Etudiant> profilList;
+    private ImageButton btnBack;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.interface12);
+
+        // 1. Liaison des vues XML
+        recyclerViewProfils = findViewById(R.id.recyclerViewProfils);
+        btnBack = findViewById(R.id.btnBack);
+
+        // 2. Configuration du RecyclerView
+        recyclerViewProfils.setLayoutManager(new LinearLayoutManager(this));
+        profilList = new ArrayList<>();
+        profilAdapter = new ProfilAdapter(profilList);
+        recyclerViewProfils.setAdapter(profilAdapter);
+
+        // 3. Gestion du bouton retour
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
+
+        // 4. Récupération de l'e-mail de l'étudiant connecté transmis par l'Intent
+        String email = getIntent().getStringExtra("USER_EMAIL");
+        if (email == null || email.isEmpty()) {
+            email = "testtt@gmail.com"; // Valeur par défaut de secours pour les tests
+        }
+
+        // 5. Charger les profils compatibles depuis le serveur Spring Boot
+        chargerProfilsCompatibles(email);
+    }
+
+    private void chargerProfilsCompatibles(String email) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        executor.execute(() -> {
+            try {
+                // URL de ton endpoint Spring Boot
+                URL url = new URL(Config.BASE_URL + "/api/etudiants/compatibles?email=" + email);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Accept", "application/json");
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                    br.close();
+
+                    // Parsing du tableau JSON reçu du serveur (Format DTO : EtudiantAvecScore)
+                    JSONArray jsonArray = new JSONArray(response.toString());
+                    profilList.clear();
+
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        // 1. Récupération de l'objet global contenant le pourcentage et l'étudiant
+                        JSONObject itemObj = jsonArray.getJSONObject(i);
+
+                        // Récupération du pourcentage calculé par le backend
+                        int pourcentage = itemObj.optInt("pourcentage", 50);
+
+                        // 2. Extraction de l'objet imbriqué "etudiant"
+                        JSONObject obj = itemObj.getJSONObject("etudiant");
+
+                        // Récupération des champs de l'entité Etudiant
+                        String nom = obj.optString("nomComplet", "Étudiant");
+                        String userEmail = obj.optString("email", "");
+                        String universite = obj.optString("universite", "Université de Sousse");
+                        int age = obj.optInt("age", 21);
+                        double budget = obj.optDouble("budgetMax", 300.0);
+                        String quartier = obj.optString("quartier", "Non spécifié");
+                        String modeDeVie = obj.optString("modeDeVie", "");
+                        String nbColocataires = obj.optString("nbColocataires", "");
+                        String proprete = obj.optString("proprete", "");
+                        String animauxAcceptes = obj.optString("animauxAcceptes", "");
+                        String photoUrl = obj.optString("photoUrl", ""); // <-- Récupération de l'URL de la photo
+
+                        Etudiant etudiant = new Etudiant(nom, userEmail, universite, age, budget, modeDeVie, nbColocataires, proprete, animauxAcceptes);
+
+                        // Injection des valeurs complémentaires dans l'objet Etudiant
+                        etudiant.setPourcentage(pourcentage);
+                        etudiant.setQuartier(quartier);
+                        etudiant.setPhotoUrl(photoUrl); // <-- Assignation de la photo
+
+                        profilList.add(etudiant);
+                    }
+                } else {
+                    handler.post(() -> Toast.makeText(this, "Erreur serveur : " + responseCode, Toast.LENGTH_SHORT).show());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                handler.post(() -> Toast.makeText(this, "Erreur de connexion : " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+
+            // Mise à jour de l'UI sur le thread principal
+            handler.post(() -> profilAdapter.notifyDataSetChanged());
+        });
+    }
+}
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\Interfaceprofilecoloc.java
+################################################################
+package com.example.diar;
+
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.ImageButton;
+import android.widget.Toast;
+import android.content.Intent;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Interfaceprofilecoloc extends AppCompatActivity {
+
+    private ChipGroup chipGroupLifestyle, chipGroupRoommates, chipGroupPets;
+    private MaterialButton btnSave;
+    private ImageButton btnBack;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.interfacecoloc); // Remplacez par le nom exact de votre fichier XML (ex: R.layout.activity_profil_colocataire)
+
+        // 1. Liaison des vues XML
+        chipGroupLifestyle = findViewById(R.id.chipGroupLifestyle);
+        chipGroupRoommates = findViewById(R.id.chipGroupRoommates);
+        chipGroupPets = findViewById(R.id.chipGroupPets);
+        ChipGroup chipGroupProprete = findViewById(R.id.chipGroupProprete);
+        btnSave = findViewById(R.id.btnSave);
+        btnBack = findViewById(R.id.btnBack);
+
+        // 2. Gestion du bouton retour
+        btnBack.setOnClickListener(v -> finish());
+
+        // 3. Gestion du clic sur le bouton d'enregistrement
+        btnSave.setOnClickListener(v -> collecterEtEnvoyerDonnees());
+    }
+
+    private void collecterEtEnvoyerDonnees() {
+        // Récupération de l'e-mail de l'étudiant connecté transmis par l'Intent
+        String email = getIntent().getStringExtra("USER_EMAIL");
+        if (email == null || email.isEmpty()) {
+            Toast.makeText(this, "Erreur : E-mail introuvable", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // --- Récupération des choix multiples (Mode de vie) ---
+        StringBuilder modeDeVieBuilder = new StringBuilder();
+        for (int i = 0; i < chipGroupLifestyle.getChildCount(); i++) {
+            if (chipGroupLifestyle.getChildAt(i) instanceof Chip) {
+                Chip chip = (Chip) chipGroupLifestyle.getChildAt(i);
+                if (chip.isChecked()) {
+                    if (modeDeVieBuilder.length() > 0) {
+                        modeDeVieBuilder.append(", ");
+                    }
+                    modeDeVieBuilder.append(chip.getText().toString());
+                }
+            }
+        }
+        String modeDeVie = modeDeVieBuilder.toString();
+
+        // --- Récupération du nombre de colocataires acceptés (Sélection unique) ---
+        String nbColocataires = "";
+        int selectedRoommateId = chipGroupRoommates.getCheckedChipId();
+        if (selectedRoommateId != android.view.View.NO_ID) {
+            Chip selectedChip = findViewById(selectedRoommateId);
+            if (selectedChip != null) {
+                nbColocataires = selectedChip.getText().toString();
+            }
+        }
+
+        // --- Récupération de la propreté (Sélection unique) ---
+        String proprete = "";
+        ChipGroup chipGroupProprete = findViewById(R.id.chipGroupProprete);
+        int checkedIdProprete = chipGroupProprete.getCheckedChipId();
+        if (checkedIdProprete != android.view.View.NO_ID) {
+            Chip selectedChip = findViewById(checkedIdProprete);
+            if (selectedChip != null) {
+                proprete = selectedChip.getText().toString();
+            }
+        }
+
+        // --- Récupération de l'acceptation des animaux (Sélection unique) ---
+        String animauxAcceptes = "";
+        int selectedPetId = chipGroupPets.getCheckedChipId();
+        if (selectedPetId != android.view.View.NO_ID) {
+            Chip selectedPetChip = findViewById(selectedPetId);
+            if (selectedPetChip != null) {
+                animauxAcceptes = selectedPetChip.getText().toString();
+            }
+        }
+
+        // Validation simple : s'assurer que l'utilisateur a rempli au moins un champ
+        if (modeDeVie.isEmpty() && nbColocataires.isEmpty() && proprete.isEmpty() && animauxAcceptes.isEmpty()) {
+            Toast.makeText(this, "Veuillez sélectionner au moins une préférence.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Envoi des données vers le serveur Spring Boot en arrière-plan (avec le paramètre proprete ajouté)
+        envoyerDonneesAuServeur(email, modeDeVie, nbColocataires, proprete, animauxAcceptes);
+    }
+
+    private void envoyerDonneesAuServeur(String email, String modeDeVie, String nbColocataires, String proprete, String animauxAcceptes) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        final boolean[] success = {false};
+        final String[] messageReponse = {""};
+
+        executor.execute(() -> {
+            try {
+                // URL de votre endpoint Spring Boot
+                URL url = new URL(Config.BASE_URL + "/api/etudiants/profil-colocataire");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json; utf-8");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setDoOutput(true);
+
+                // Construction de l'objet JSON à envoyer
+                JSONObject jsonParam = new JSONObject();
+                jsonParam.put("email", email);
+                jsonParam.put("modeDeVie", modeDeVie);
+                jsonParam.put("nbColocataires", nbColocataires);
+                jsonParam.put("proprete", proprete); // Ajouté ici pour correspondre au backend
+                jsonParam.put("animauxAcceptes", animauxAcceptes);
+
+                // Écriture des données dans la requête
+                try (OutputStream os = conn.getOutputStream()) {
+                    byte[] input = jsonParam.toString().getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == 200 || responseCode == 201) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                    br.close();
+                    success[0] = true;
+                    messageReponse[0] = "Critères enregistrés avec succès !";
+                } else {
+                    messageReponse[0] = "Erreur serveur (Code " + responseCode + ")";
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                messageReponse[0] = "Erreur de connexion : " + e.getMessage();
+            }
+
+            // Retour sur le thread principal pour informer l'utilisateur
+            handler.post(() -> {
+                Toast.makeText(Interfaceprofilecoloc.this, messageReponse[0], Toast.LENGTH_LONG).show();
+                if (success[0]) {
+                    // Redirection vers l'Interface 7 (Accueil) après l'enregistrement du profil coloc
+                    Intent intent = new Intent(Interfaceprofilecoloc.this, Interface7.class);
+                    intent.putExtra("USER_EMAIL", email);
+                    startActivity(intent);
+                    finish();
+                }
+            });
+        });
+    }
+}
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\BaseActivity.java
+################################################################
+package com.example.diar;
+
+import android.content.Intent;
+import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
+import androidx.appcompat.app.AppCompatActivity;
+
+public abstract class BaseActivity extends AppCompatActivity {
+
+    /**
+     * Configuration des clics pour la barre de navigation du bas
+     */
+    protected void setupBottomNavigation() {
+
+        LinearLayout navAccueil = findViewById(R.id.navAccueil);
+        LinearLayout navCarte = findViewById(R.id.navCarte);
+        View navChat = findViewById(R.id.navChat);
+        LinearLayout navProfil = findViewById(R.id.navProfil);
+
+        Log.d("DEBUG_NAV", "Activity : " + getClass().getSimpleName());
+        Log.d("DEBUG_NAV", "Accueil : " + (navAccueil != null));
+        Log.d("DEBUG_NAV", "Carte : " + (navCarte != null));
+        Log.d("DEBUG_NAV", "Chat : " + (navChat != null));
+        Log.d("DEBUG_NAV", "Profil : " + (navProfil != null));
+
+        if (navAccueil != null) {
+            navAccueil.setOnClickListener(v -> navigateTo(Interface7.class));
+        }
+
+        if (navCarte != null) {
+            navCarte.setOnClickListener(v -> navigateTo(Interface9.class));
+        }
+
+        if (navChat != null) {
+            navChat.setOnClickListener(v -> navigateTo(Interface14.class));
+        }
+
+        if (navProfil != null) {
+            navProfil.setOnClickListener(v -> navigateTo(Interface17.class));
+        }
+    }
+
+    protected void setupBackButton() {
+        setupBackButton(MainActivity1.class);
+    }
+
+    protected void setupBackButton(Class<?> targetActivity) {
+        View btnBack = findViewById(R.id.btnBack);
+
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                if (this.getClass().equals(targetActivity)) {
+                    finish();
+                } else {
+                    navigateTo(targetActivity);
+                }
+            });
+        }
+    }
+
+    /**
+     * Méthode de navigation universelle et fluide
+     */
+    private void navigateTo(Class<?> targetActivity) {
+        if (!this.getClass().equals(targetActivity)) {
+            Intent intent = new Intent(this, targetActivity);
+            // Évite d'empiler les mêmes activités en boucle et garde un historique propre
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+        }
+    }
+}
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\java\com\example\diar\Config.java
+################################################################
+package com.example.diar;
+
+public class Config {
+    // Mode cable USB (adb reverse) : fonctionne sur n'importe quel reseau
+    public static final String BASE_URL = "http://localhost:8083";
+
+    // Mode Wi-Fi : commente la ligne du dessus, decommente celle-ci
+    // et mets l'IP du PC (commande ipconfig)
+    // public static final String BASE_URL = "http://192.168.6.36:8083";
+}
+
+################################################################
+## ANDROID : navigation et extras (startActivity, new Intent, getStringExtra, putExtra, SharedPreferences)
+################################################################
+AccueilProprietaire.java:80: nomProprietaire = getIntent().getStringExtra("nomProprietaire");
+AccueilProprietaire.java:81: emailProprietaire = getIntent().getStringExtra("emailProprietaire");
+AccueilProprietaire.java:116: Intent intent = new Intent(
+AccueilProprietaire.java:121: intent.putExtra(
+AccueilProprietaire.java:126: intent.putExtra(
+AccueilProprietaire.java:131: startActivity(intent);
+AccueilProprietaire.java:402: Intent intent = new Intent(
+AccueilProprietaire.java:407: intent.putExtra("idAnnonce", id);
+AccueilProprietaire.java:409: startActivity(intent);
+AjouterAnnonce.java:73: new ActivityResultContracts.StartActivityForResult(),
+AjouterAnnonce.java:122: Intent intent = new Intent(
+AjouterAnnonce.java:341: Intent intent = new Intent(
+AjouterAnnonce.java:347: startActivity(intent);
+BaseActivity.java:67: Intent intent = new Intent(this, targetActivity);
+BaseActivity.java:70: startActivity(intent);
+CarteProp.java:55: PreferenceManager.getDefaultSharedPreferences(ctx)
+CarteProp.java:314: Intent data = new Intent();
+CarteProp.java:316: data.putExtra("latitude", selectedPoint.getLatitude());
+CarteProp.java:317: data.putExtra("longitude", selectedPoint.getLongitude());
+ChatProprietaire.java:27: String nom = getIntent().getStringExtra("nomEtudiant");
+DetailAnnonce.java:83: getIntent().getLongExtra("idAnnonce", -1);
+interface1.java:19: Intent intent = new Intent(interface1.this, Interface3.class);
+interface1.java:20: startActivity(intent);
+Interface12.java:53: String email = getIntent().getStringExtra("USER_EMAIL");
+Interface13.java:49: String nom = getIntent().getStringExtra("NOM");
+Interface13.java:50: int pourcentage = getIntent().getIntExtra("POURCENTAGE", 0);
+Interface13.java:51: String universite = getIntent().getStringExtra("UNIVERSITE");
+Interface13.java:52: int age = getIntent().getIntExtra("AGE", 21);
+Interface13.java:53: double budget = getIntent().getDoubleExtra("BUDGET", 0.0);
+Interface13.java:54: String quartier = getIntent().getStringExtra("QUARTIER");
+Interface13.java:55: String modeDeVie = getIntent().getStringExtra("MODE_DE_VIE");
+Interface13.java:56: String proprete = getIntent().getStringExtra("PROPRETE");
+Interface13.java:57: String animaux = getIntent().getStringExtra("ANIMAUX");
+Interface13.java:58: String photoUrl = getIntent().getStringExtra("PHOTO_URL"); // Récupération de l'URL de la photo
+Interface21.java:47: Intent intent = new Intent(
+Interface21.java:52: intent.putExtra("nomEtudiant", nom);
+Interface21.java:55: intent.putExtra(
+Interface21.java:57: getIntent().getStringExtra("nomProprietaire")
+Interface21.java:60: intent.putExtra(
+Interface21.java:62: getIntent().getStringExtra("emailProprietaire")
+Interface21.java:65: startActivity(intent);
+interface22.java:33: String nom = getIntent().getStringExtra("nomProprietaire");
+interface22.java:34: String email = getIntent().getStringExtra("emailProprietaire");
+interface22.java:83: Intent intent = new Intent(this, Interface3.class);
+interface22.java:90: startActivity(intent);
+Interface3.java:50: Intent intent = new Intent(
+Interface3.java:54: startActivity(intent);
+Interface3.java:112: Intent intent = new Intent(
+Interface3.java:117: intent.putExtra("nomProprietaire", nom);
+Interface3.java:118: intent.putExtra("emailProprietaire", emailRetour);
+Interface3.java:120: startActivity(intent);
+Interface4.java:29: Intent intent = new Intent(Interface4.this,
+Interface4.java:31: startActivity(intent);
+Interface4.java:36: Intent intent = new Intent(Interface4.this,
+Interface4.java:38: startActivity(intent);
+Interface5.java:61: userEmail = getIntent().getStringExtra("USER_EMAIL");
+Interface5.java:65: userName = getIntent().getStringExtra("USER_NAME");
+Interface5.java:361: Intent intent = new Intent(
+Interface5.java:366: intent.putExtra("USER_EMAIL", userEmail);
+Interface5.java:367: intent.putExtra("USER_NAME", userName);
+Interface5.java:369: startActivity(intent);
+Interface6.java:96: userEmail = getIntent().getStringExtra("USER_EMAIL");
+Interface6.java:585: Intent intent = new Intent(
+Interface6.java:590: intent.putExtra(
+Interface6.java:595: startActivity(intent);
+Interfacecreercompteetudiant.java:327: Intent intent = new Intent(
+Interfacecreercompteetudiant.java:332: intent.putExtra("USER_EMAIL", emailClean);
+Interfacecreercompteetudiant.java:333: intent.putExtra("USER_NAME", nom);
+Interfacecreercompteetudiant.java:335: startActivity(intent);
+Interfaceprofilecoloc.java:54: String email = getIntent().getStringExtra("USER_EMAIL");
+Interfaceprofilecoloc.java:171: Intent intent = new Intent(Interfaceprofilecoloc.this, Interface7.class);
+Interfaceprofilecoloc.java:172: intent.putExtra("USER_EMAIL", email);
+Interfaceprofilecoloc.java:173: startActivity(intent);
+Interfaceverification.java:50: new ActivityResultContracts.StartActivityForResult(),
+Interfaceverification.java:116: userEmail = getIntent().getStringExtra("USER_EMAIL");
+Interfaceverification.java:133: Intent intent = new Intent(Intent.ACTION_PICK);
+Interfaceverification.java:211: Intent intent = new Intent(Interfaceverification.this, Interface6.class);
+Interfaceverification.java:213: // intent.putExtra("USER_EMAIL", userEmail);
+Interfaceverification.java:214: startActivity(intent);
+interface_creer_compte_proprietaire.java:134: Intent intent = new Intent(
+interface_creer_compte_proprietaire.java:138: startActivity(intent);
+NavigationHelper.java:46: Intent intent = new Intent(currentActivity, targetActivity);
+NavigationHelper.java:49: currentActivity.startActivity(intent);
+NavigationProprietaire.java:118: Intent intent = new Intent(activity, destination);
+NavigationProprietaire.java:120: intent.putExtra(
+NavigationProprietaire.java:122: activity.getIntent().getStringExtra("nomProprietaire")
+NavigationProprietaire.java:125: intent.putExtra(
+NavigationProprietaire.java:127: activity.getIntent().getStringExtra("emailProprietaire")
+NavigationProprietaire.java:130: activity.startActivity(intent);
+ProfilAdapter.java:73: Intent intent = new Intent(context, Interface13.class);
+ProfilAdapter.java:75: intent.putExtra("NOM", etudiantClique.getNomComplet());
+ProfilAdapter.java:76: intent.putExtra("POURCENTAGE", etudiantClique.getPourcentage());
+ProfilAdapter.java:77: intent.putExtra("UNIVERSITE", etudiantClique.getUniversite());
+ProfilAdapter.java:78: intent.putExtra("AGE", etudiantClique.getAge());
+ProfilAdapter.java:79: intent.putExtra("BUDGET", etudiantClique.getBudgetMax());
+ProfilAdapter.java:80: intent.putExtra("QUARTIER", etudiantClique.getQuartier());
+ProfilAdapter.java:81: intent.putExtra("MODE_DE_VIE", etudiantClique.getModeDeVie());
+ProfilAdapter.java:82: intent.putExtra("PROPRETE", etudiantClique.getProprete());
+ProfilAdapter.java:83: intent.putExtra("ANIMAUX", etudiantClique.getAnimauxAcceptes());
+ProfilAdapter.java:84: intent.putExtra("PHOTO_URL", etudiant.getPhotoUrl());
+ProfilAdapter.java:86: context.startActivity(intent);
+SessionManager.java:4: import android.content.SharedPreferences;
+SessionManager.java:10: private SharedPreferences prefs;
+SessionManager.java:11: private SharedPreferences.Editor editor;
+SessionManager.java:14: prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+
+################################################################
+## FICHIER : .\DIAR\app\src\main\res\layout\interface3.xml
+################################################################
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#FFFFFF">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <!-- Logo / Titre DIAR -->
+        <TextView
+            android:id="@+id/tvLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="DIAR"
+            android:textColor="#0F2851"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Titre Se connecter -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="Se connecter"
+            android:textColor="#0F2851"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvLogo" />
+
+        <!-- Sous-titre -->
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Connectez-vous pour accéder à votre compte"
+            android:textColor="#64748B"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
+        <!-- Champ Email / Téléphone -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutEmail"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp"
+            app:boxStrokeColor="#E2E8F0"
+            app:hintEnabled="false"
+            app:startIconDrawable="@android:drawable/ic_dialog_email"
+            app:startIconTint="#94A3B8"
+            app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etEmail"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="Email ou numéro de téléphone"
+                android:inputType="textEmailAddress"
+                android:paddingVertical="10dp"
+                android:textColor="#0F172A"
+                android:textColorHint="#94A3B8"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Champ Mot de passe -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutPassword"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp"
+            app:boxStrokeColor="#E2E8F0"
+            app:hintEnabled="false"
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="#94A3B8"
+            app:startIconDrawable="@android:drawable/ic_lock_idle_lock"
+            app:startIconTint="#94A3B8"
+            app:layout_constraintTop_toBottomOf="@id/layoutEmail">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="Mot de passe"
+                android:inputType="textPassword"
+                android:paddingVertical="10dp"
+                android:textColor="#0F172A"
+                android:textColorHint="#94A3B8"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Mot de passe oublié -->
+        <TextView
+            android:id="@+id/tvForgotPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Mot de passe oublié ?"
+            android:textColor="#00A86B"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/layoutPassword" />
+
+        <!-- Bouton Se connecter -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="24dp"
+            android:text="Se connecter"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="#00A86B"
+            app:cornerRadius="27dp"
+            app:layout_constraintTop_toBottomOf="@id/tvForgotPassword" />
+
+        <!-- Ligne & texte OU -->
+        <LinearLayout
+            android:id="@+id/layoutDivider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/btnLogin">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="#E2E8F0" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:text="ou"
+                android:textColor="#94A3B8"
+                android:textSize="13sp" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="#E2E8F0" />
+        </LinearLayout>
+
+        <!-- Bouton Continuer avec Google -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGoogle"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
+            android:text="Continuer avec Google"
+            android:textAllCaps="false"
+            android:textColor="#0F2851"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="#FFFFFF"
+            app:cornerRadius="26dp"
+            app:icon="@drawable/common_google_signin_btn_icon_dark_normal"
+            app:iconGravity="textStart"
+            app:iconPadding="10dp"
+            app:iconTint="@null"
+            app:strokeColor="#E2E8F0"
+            app:strokeWidth="1dp"
+            app:layout_constraintTop_toBottomOf="@id/layoutDivider" />
+
+        <!-- Bouton Créer un compte -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRegister"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="12dp"
+            android:text="Créer un compte"
+            android:textAllCaps="false"
+            android:textColor="#00A86B"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="#FFFFFF"
+            app:cornerRadius="26dp"
+            app:strokeColor="#00A86B"
+            app:strokeWidth="1dp"
+            app:layout_constraintTop_toBottomOf="@id/btnGoogle" />
+
+        <!-- Texte bas de page -->
+        <TextView
+            android:id="@+id/tvNoAccount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="16dp"
+            android:text="Vous n'avez pas de compte ?"
+            android:textColor="#64748B"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnRegister" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
+
+################################################################
+## FICHIER : .\DIAR\app\build.gradle.kts
+################################################################
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+}
+
+android {
+    namespace = "com.example.diar"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "com.example.diar"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
+
+dependencies {
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.play.services.maps)
+    implementation(libs.androidx.cardview)
+    implementation(libs.play.services.ads)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    implementation("com.android.volley:volley:1.2.1")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
+
+    // 🖼️ Ajout de Glide pour le chargement des photos de profil depuis le serveur
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+}
+
+
+################################################################
+## BACKEND : arborescence src\main\java
+################################################################
+.\src\main\java\com\diar\backend_diar\BackendDiarApplication.java
+.\src\main\java\com\diar\backend_diar\config\WebConfig.java
+.\src\main\java\com\diar\backend_diar\controller\AnnonceController.java
+.\src\main\java\com\diar\backend_diar\controller\EtudiantController.java
+.\src\main\java\com\diar\backend_diar\controller\PhotoProprietaireController.java
+.\src\main\java\com\diar\backend_diar\controller\ProprietaireController.java
+.\src\main\java\com\diar\backend_diar\dto\EtudiantAvecScore.java
+.\src\main\java\com\diar\backend_diar\entity\Annonce.java
+.\src\main\java\com\diar\backend_diar\entity\Etudiant.java
+.\src\main\java\com\diar\backend_diar\entity\Proprietaire.java
+.\src\main\java\com\diar\backend_diar\repository\AnnonceRepository.java
+.\src\main\java\com\diar\backend_diar\repository\EtudiantRepository.java
+.\src\main\java\com\diar\backend_diar\repository\ProprietaireRepository.java
+.\src\main\java\com\diar\backend_diar\service\EtudiantService.java
+
+################################################################
+## BACKEND : tous les endpoints (Mapping)
+################################################################
+AnnonceController.java:12: @RequestMapping("/api/annonces")
+AnnonceController.java:23: @PostMapping
+AnnonceController.java:44: @GetMapping
+AnnonceController.java:55: @GetMapping("/{id}")
+AnnonceController.java:73: @DeleteMapping("/{id}")
+EtudiantController.java:32: @RequestMapping("/api/etudiants")
+EtudiantController.java:43: @PostMapping
+EtudiantController.java:74: @GetMapping("/profil")
+EtudiantController.java:96: @PostMapping("/profil")
+EtudiantController.java:139: @PostMapping("/verifier")
+EtudiantController.java:321: @PostMapping("/preferences")
+EtudiantController.java:372: @PostMapping("/profil-colocataire")
+EtudiantController.java:418: @GetMapping("/compatibles")
+EtudiantController.java:493: @PostMapping(value = "/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+PhotoProprietaireController.java:22: @RequestMapping("/api/proprietaires")
+PhotoProprietaireController.java:38: @PostMapping(
+PhotoProprietaireController.java:133: @GetMapping("/profil")
+PhotoProprietaireController.java:163: @GetMapping("/photo/{nomFichier}")
+ProprietaireController.java:13: @RequestMapping("/api/proprietaires")
+ProprietaireController.java:26: @PostMapping("/verifier")
+ProprietaireController.java:82: @PostMapping("/connexion")
+
+################################################################
+## BACKEND : securite / CORS (SecurityFilterChain, CorsConfiguration, WebMvcConfigurer, CrossOrigin, csrf)
+################################################################
+WebConfig.java:5: import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+WebConfig.java:8: public class WebConfig implements WebMvcConfigurer {
+AnnonceController.java:13: @CrossOrigin
+
+################################################################
+## FICHIER : .\backend-diar\src\main\java\com\diar\backend_diar\controller\EtudiantController.java
+################################################################
+package com.diar.backend_diar.controller;
+
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.diar.backend_diar.dto.EtudiantAvecScore;
+import com.diar.backend_diar.entity.Etudiant;
+import com.diar.backend_diar.repository.EtudiantRepository;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.springframework.http.MediaType;
+import java.util.UUID;
+
+@SuppressWarnings("unused")
+@RestController
+@RequestMapping("/api/etudiants")
+public class EtudiantController {
+
+    private final EtudiantRepository etudiantRepository;
+
+    public EtudiantController(EtudiantRepository etudiantRepository) {
+        this.etudiantRepository = etudiantRepository;
+    }
+
+    // 1. Inscription initiale (Création de l'étudiant avec nom, email et mot de
+    // passe)
+    @PostMapping
+    public ResponseEntity<?> creerEtudiant(@RequestBody Etudiant etudiant) {
+        try {
+            if (etudiant == null || etudiant.getEmail() == null || etudiant.getEmail().trim().isEmpty()) {
+                return ResponseEntity.status(400).body("L'e-mail est obligatoire !");
+            }
+
+            String emailClean = etudiant.getEmail().trim();
+            if (etudiantRepository.existsByEmail(emailClean)) {
+                return ResponseEntity.status(409).body("Ce compte existe déjà !");
+            }
+
+            etudiant.setEmail(emailClean);
+
+            // Sécurité anti-crash : Initialisation des valeurs par défaut pour éviter les
+            // erreurs de contrainte en BDD
+            if (etudiant.getStatutVerification() == null) {
+                etudiant.setStatutVerification("NON_VERIFIE");
+            }
+            etudiant.setBudgetMax(0.0);
+
+            Etudiant nouvelEtudiant = etudiantRepository.save(etudiant);
+            return ResponseEntity.status(201).body(nouvelEtudiant);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur serveur lors de la création : " + e.getMessage());
+        }
+    }
+
+    // 2. Récupération du profil et des informations de l'étudiant (Interface 7)
+    @GetMapping("/profil")
+    public ResponseEntity<?> obtenirProfilParEmail(@RequestParam("email") String email) {
+        try {
+            if (email != null) {
+                email = email.trim();
+            } else {
+                return ResponseEntity.status(400).body("L'e-mail est obligatoire pour récupérer le profil.");
+            }
+
+            Etudiant etudiant = etudiantRepository.findByEmail(email);
+            if (etudiant == null) {
+                return ResponseEntity.status(404).body("Étudiant introuvable pour l'email : " + email);
+            }
+
+            return ResponseEntity.ok(etudiant);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur serveur : " + e.getMessage());
+        }
+    }
+
+    // 3. Mise à jour du profil (Interface 5 : genre, université, niveau et photo)
+    @PostMapping("/profil")
+    public ResponseEntity<?> mettreAJourProfil(
+            @RequestParam("email") String email,
+            @RequestParam("genre") String genre,
+            @RequestParam("universite") String universite,
+            @RequestParam("niveau") String niveau,
+            @RequestParam(value = "photo", required = false) MultipartFile photo) {
+
+        try {
+            if (email != null)
+                email = email.trim();
+            Etudiant etudiant = etudiantRepository.findByEmail(email);
+            if (etudiant == null) {
+                List<Etudiant> tous = etudiantRepository.findAll();
+                if (!tous.isEmpty()) {
+                    etudiant = tous.get(0);
+                } else {
+                    return ResponseEntity.status(404).body("Étudiant introuvable pour l'email : " + email);
+                }
+            }
+
+            etudiant.setGenre(genre);
+            etudiant.setUniversite(universite);
+            etudiant.setNiveau(niveau);
+
+            if (photo != null && !photo.isEmpty()) {
+                String fileName = System.currentTimeMillis() + "_" + photo.getOriginalFilename();
+                Path path = Paths.get("uploads/" + fileName);
+                Files.createDirectories(path.getParent());
+                Files.write(path, photo.getBytes());
+                etudiant.setPhotoUrl(fileName);
+            }
+
+            Etudiant etudiantMisAJour = etudiantRepository.save(etudiant);
+            return ResponseEntity.ok(etudiantMisAJour);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur serveur : " + e.getMessage());
+        }
+    }
+
+    // 4. Vérification automatique par OCR de l'attestation d'inscription
+    @PostMapping("/verifier")
+    public ResponseEntity<?> verifierEtudiant(
+            @RequestParam("email") String email,
+            @RequestParam("carte") MultipartFile fichierAttestation) {
+
+        File tempFile = null;
+        try {
+            if (email != null)
+                email = email.trim();
+            Etudiant etudiant = etudiantRepository.findByEmail(email);
+            if (etudiant == null) {
+                List<Etudiant> tous = etudiantRepository.findAll();
+                if (!tous.isEmpty()) {
+                    etudiant = tous.get(0);
+                } else {
+                    return ResponseEntity.status(404).body("Étudiant introuvable avec cet e-mail.");
+                }
+            }
+
+            tempFile = File.createTempFile("attestation_", ".jpg");
+            Files.copy(fichierAttestation.getInputStream(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            Tesseract tesseract = new Tesseract();
+            tesseract.setDatapath("C:/tessdata");
+            tesseract.setLanguage("fra");
+
+            String texteExtrait = tesseract.doOCR(tempFile);
+            String texteMaj = texteExtrait.toUpperCase();
+
+            System.out.println("=== TEXTE EXTRAIT PAR TESSERACT ===");
+            System.out.println(texteMaj);
+            System.out.println("==================================");
+
+            // 1. VÉRIFICATION DES MOTS-CLÉS GLOBAUX (Séparée pour un message simple direct)
+            boolean contientMotsCles = texteMaj.contains("ATTESTATION") ||
+                    texteMaj.contains("INSCRIPTION") ||
+                    texteMaj.contains("UNIVERSITE") ||
+                    texteMaj.contains("INSTITUT") ||
+                    texteMaj.contains("FACULTE");
+
+            if (!contientMotsCles) {
+                etudiant.setStatutVerification("NON_VERIFIE");
+                etudiantRepository.save(etudiant);
+                return ResponseEntity.status(400).body("Il ne s'agit pas d'une attestation d'inscription.");
+            }
+
+            // Liste pour accumuler toutes les autres erreurs de validation si c'est bien
+            // une attestation
+            List<String> erreurs = new java.util.ArrayList<>();
+
+            // 2. VÉRIFICATION DE L'ANNÉE UNIVERSITAIRE
+            LocalDate aujourdHui = LocalDate.now();
+            int anneeActuelle = aujourdHui.getYear();
+            int moisActuel = aujourdHui.getMonthValue();
+
+            String anneeUniversitaire1, anneeUniversitaire2;
+            if (moisActuel >= 9) {
+                anneeUniversitaire1 = anneeActuelle + "-" + (anneeActuelle + 1);
+                anneeUniversitaire2 = anneeActuelle + "/" + (anneeActuelle + 1);
+            } else {
+                anneeUniversitaire1 = (anneeActuelle - 1) + "-" + anneeActuelle;
+                anneeUniversitaire2 = (anneeActuelle - 1) + "/" + anneeActuelle;
+            }
+
+            boolean anneePresente = texteMaj.contains(anneeUniversitaire1) || texteMaj.contains(anneeUniversitaire2);
+
+            if (!anneePresente) {
+                erreurs.add("L'attestation n'est pas valide pour l'année universitaire en cours (" + anneeUniversitaire1
+                        + ").");
+            }
+
+            // 3. VÉRIFICATION DU NOM COMPLET (Sans Regex)
+            String nomEtudiant = etudiant.getNomComplet() != null ? etudiant.getNomComplet().toUpperCase().trim() : "";
+            boolean nomPresent = false;
+
+            if (!nomEtudiant.isEmpty()) {
+                String[] motsNom = nomEtudiant.split(" ");
+                int motsTrouves = 0;
+                int totalMots = 0;
+
+                for (String mot : motsNom) {
+                    mot = mot.trim();
+                    if (mot.length() >= 3) {
+                        totalMots++;
+                        if (texteMaj.contains(mot)) {
+                            motsTrouves++;
+                        }
+                    }
+                }
+
+                if (totalMots == 0 || motsTrouves >= 1) {
+                    nomPresent = true;
+                }
+            } else {
+                nomPresent = true;
+            }
+
+            if (!nomPresent) {
+                erreurs.add("Le nom complet ne correspond pas au document.");
+            }
+
+            // 4. VÉRIFICATION STRICTE DU NIVEAU D'ÉTUDE (Sans Regex)
+            String niveauEtudiant = etudiant.getNiveau() != null ? etudiant.getNiveau().toUpperCase().trim() : "";
+            boolean niveauPresent = true;
+
+            if (!niveauEtudiant.isEmpty()) {
+                String[] motsNiveau = niveauEtudiant.split(" ");
+                int motsTotal = 0;
+                int motsTrouves = 0;
+
+                for (String mot : motsNiveau) {
+                    mot = mot.trim();
+                    // On ignore les mots de liaison trop courts
+                    if (mot.length() >= 2 && !mot.equals("DE") && !mot.equals("LA") && !mot.equals("ET")
+                            && !mot.equals("EN") && !mot.equals("DU")) {
+                        motsTotal++;
+                        if (texteMaj.contains(mot)) {
+                            motsTrouves++;
+                        }
+                    }
+                }
+
+                // Pour que le niveau soit valide, TOUS les mots significatifs (ex: le chiffre
+                // et "année")
+                // doivent être présents dans le texte extrait par l'OCR.
+                if (motsTotal > 0 && motsTrouves < motsTotal) {
+                    niveauPresent = false;
+                }
+            }
+
+            if (!niveauPresent) {
+                erreurs.add("Le niveau d'étude ne correspond pas au document.");
+            }
+            // 5. VÉRIFICATION DE L'UNIVERSITÉ (Sans Regex)
+            String universiteEtudiante = etudiant.getUniversite() != null
+                    ? etudiant.getUniversite().toUpperCase().trim()
+                    : "";
+            boolean universitePresente = true;
+
+            if (!universiteEtudiante.isEmpty()) {
+                String[] motsUniv = universiteEtudiante.split(" ");
+                boolean trouveUniv = false;
+                for (String mot : motsUniv) {
+                    mot = mot.trim();
+                    if (mot.length() > 3 && texteMaj.contains(mot)) {
+                        trouveUniv = true;
+                        break;
+                    }
+                }
+                universitePresente = trouveUniv;
+            }
+
+            if (!universitePresente) {
+                erreurs.add("L'université ne correspond pas au document.");
+            }
+
+            // S'il y a des erreurs, on les retourne toutes ensemble
+            if (!erreurs.isEmpty()) {
+                etudiant.setStatutVerification("NON_VERIFIE");
+                etudiantRepository.save(etudiant);
+                return ResponseEntity.status(400).body("Échec de vérification : " + String.join(" | ", erreurs));
+            }
+
+            // 6. VALIDATION FINALE RÉUSSIE
+            etudiant.setStatutVerification("VERIFIE");
+            etudiantRepository.save(etudiant);
+            return ResponseEntity.ok("Vérification automatique réussie ! Compte validé.");
+
+        } catch (TesseractException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur lors de l'analyse OCR : " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur serveur : " + e.getMessage());
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
+    }
+
+    // 5. Enregistrement des préférences de logement
+    @PostMapping("/preferences")
+    public ResponseEntity<?> enregistrerPreferences(
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam("typeLogement") String typeLogement,
+            @RequestParam("locationType") String locationType,
+            @RequestParam("budgetMax") double budgetMax,
+            @RequestParam("equipements") String equipements,
+            @RequestParam("quartier") String quartier) {
+
+        try {
+            if (email != null) {
+                email = email.trim();
+            }
+
+            System.out.println("=== EMAIL REÇU POUR PRÉFÉRENCES : [" + email + "] ===");
+
+            Etudiant etudiant = null;
+            if (email != null && !email.isEmpty()) {
+                etudiant = etudiantRepository.findByEmail(email);
+            }
+
+            if (etudiant == null) {
+                System.out.println("⚠️ Email introuvable ou vide, utilisation du premier étudiant en BDD par défaut.");
+                List<Etudiant> tousLesEtudiants = etudiantRepository.findAll();
+                if (!tousLesEtudiants.isEmpty()) {
+                    etudiant = tousLesEtudiants.get(0);
+                }
+            }
+
+            if (etudiant == null) {
+                System.out.println("❌ ERREUR : Aucun étudiant trouvé dans la base de données !");
+                return ResponseEntity.status(404).body("Aucun étudiant trouvé dans la base de données.");
+            }
+
+            etudiant.setTypeLogement(typeLogement);
+            etudiant.setLocationType(locationType);
+            etudiant.setBudgetMax(budgetMax);
+            etudiant.setEquipements(equipements);
+            etudiant.setQuartier(quartier);
+
+            etudiantRepository.save(etudiant);
+
+            System.out.println("✅ Préférences enregistrées avec succès pour l'étudiant : " + etudiant.getEmail());
+            return ResponseEntity.ok("Préférences enregistrées avec succès !");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur serveur : " + e.getMessage());
+        }
+    }
+
+    // 6. Enregistrement du profil colocataire
+    @PostMapping("/profil-colocataire")
+    public ResponseEntity<?> enregistrerProfilColocataire(@RequestBody Map<String, String> requestBody) {
+        try {
+            String email = requestBody.get("email");
+            String modeDeVie = requestBody.get("modeDeVie");
+            String nbColocataires = requestBody.get("nbColocataires");
+            String animauxAcceptes = requestBody.get("animauxAcceptes");
+
+            // 🆕 Récupération du nouveau critère propreté
+            String proprete = requestBody.get("proprete");
+
+            if (email != null) {
+                email = email.trim();
+            }
+
+            Etudiant etudiant = null;
+            if (email != null && !email.isEmpty()) {
+                etudiant = etudiantRepository.findByEmail(email);
+            }
+
+            if (etudiant == null) {
+                List<Etudiant> tousLesEtudiants = etudiantRepository.findAll();
+                if (!tousLesEtudiants.isEmpty()) {
+                    etudiant = tousLesEtudiants.get(0);
+                }
+            }
+
+            if (etudiant == null) {
+                return ResponseEntity.status(404).body("Aucun étudiant trouvé dans la base de données.");
+            }
+
+            // Mise à jour de tous les champs (y compris la propreté)
+            etudiant.setModeDeVie(modeDeVie);
+            etudiant.setNbColocataires(nbColocataires);
+            etudiant.setAnimauxAcceptes(animauxAcceptes);
+            etudiant.setProprete(proprete); // 🆕 Enregistrement
+
+            etudiantRepository.save(etudiant);
+
+            return ResponseEntity.ok("Profil colocataire enregistré avec succès !");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur serveur : " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/compatibles")
+    public ResponseEntity<List<EtudiantAvecScore>> obtenirProfilsCompatibles(@RequestParam("email") String email) {
+        System.out.println(">>> Email reçu depuis Android : [" + email + "]");
+        try {
+            Etudiant etudiantConnecte = etudiantRepository.findByEmail(email);
+            if (etudiantConnecte == null) {
+                return ResponseEntity.status(404).body(null);
+            }
+
+            List<Etudiant> tousLesEtudiants = etudiantRepository.findAll();
+            List<EtudiantAvecScore> resultats = new ArrayList<>();
+
+            String genreConnecte = etudiantConnecte.getGenre(); // "Femme" ou "Homme"
+
+            for (Etudiant autre : tousLesEtudiants) {
+                // 1. Ne pas se comparer soi-même
+                if (autre.getEmail() != null && autre.getEmail().equalsIgnoreCase(email)) {
+                    continue;
+                }
+
+                // 2. FILTRE STRICT PAR GENRE : Si l'étudiant connecté est une femme, afficher
+                // uniquement les femmes (et vice-versa)
+                if (genreConnecte != null && !genreConnecte.equalsIgnoreCase(autre.getGenre())) {
+                    continue; // Ignore ce profil s'il ne respecte pas la règle de genre
+                }
+
+                int score = 20; // Score de base minimum
+
+                // 3. Université identique (+25 points)
+                if (etudiantConnecte.getUniversite() != null &&
+                        etudiantConnecte.getUniversite().equalsIgnoreCase(autre.getUniversite())) {
+                    score += 25;
+                }
+
+                // 4. Quartier identique (+20 points)
+                if (etudiantConnecte.getQuartier() != null &&
+                        etudiantConnecte.getQuartier().equalsIgnoreCase(autre.getQuartier())) {
+                    score += 20;
+                }
+
+                // 5. Type de logement identique (+15 points)
+                if (etudiantConnecte.getTypeLogement() != null &&
+                        etudiantConnecte.getTypeLogement().equalsIgnoreCase(autre.getTypeLogement())) {
+                    score += 15;
+                }
+
+                // 6. Budget max proche (écart de 50 DT max -> +10 points)
+                if (Math.abs(autre.getBudgetMax() - etudiantConnecte.getBudgetMax()) <= 50) {
+                    score += 10;
+                }
+
+                // 7. Propreté (+10 points)
+                if (etudiantConnecte.getProprete() != null &&
+                        etudiantConnecte.getProprete().equalsIgnoreCase(autre.getProprete())) {
+                    score += 10;
+                }
+
+                // Plafonner le score à 100%
+                if (score > 100)
+                    score = 100;
+
+                // Ajouter le résultat dans la liste
+                resultats.add(new EtudiantAvecScore(autre, score));
+            }
+
+            // Trier par pourcentage décroissant (du plus compatible au moins compatible)
+            resultats.sort((a, b) -> Integer.compare(b.getPourcentage(), a.getPourcentage()));
+
+            return ResponseEntity.ok(resultats);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+    // 7. Enregistrement de la photo de profil lors de l'inscription
+@PostMapping(value = "/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<?> enregistrerPhotoInscription(
+        @RequestParam("email") String email,
+        @RequestParam("photo") MultipartFile photo) {
+
+    try {
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Email obligatoire !");
+        }
+
+        if (photo == null || photo.isEmpty()) {
+            return ResponseEntity.badRequest().body("Photo obligatoire !");
+        }
+
+        if (photo.getSize() > 5 * 1024 * 1024) {
+            return ResponseEntity.badRequest()
+                    .body("Photo trop volumineuse (5 MB maximum).");
+        }
+
+        String contentType = photo.getContentType();
+        String extension;
+
+        if ("image/jpeg".equals(contentType)) {
+            extension = ".jpg";
+        } else if ("image/png".equals(contentType)) {
+            extension = ".png";
+        } else if ("image/webp".equals(contentType)) {
+            extension = ".webp";
+        } else {
+            return ResponseEntity.badRequest()
+                    .body("Format photo non accepté !");
+        }
+
+        String emailClean = email.trim();
+
+        Etudiant etudiant = etudiantRepository.findByEmail(emailClean);
+
+        if (etudiant == null) {
+            return ResponseEntity.status(404)
+                    .body("Étudiant introuvable !");
+        }
+
+        Path dossier = Paths.get("uploads", "etudiants");
+        Files.createDirectories(dossier);
+
+        String nomFichier = UUID.randomUUID().toString() + extension;
+
+        Path destination = dossier.resolve(nomFichier);
+
+        try (java.io.InputStream input = photo.getInputStream()) {
+            Files.copy(input, destination,
+                    StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        etudiant.setPhotoUrl("/uploads/etudiants/" + nomFichier);
+
+        etudiantRepository.save(etudiant);
+
+        Map<String, String> resultat = new HashMap<>();
+        resultat.put("message", "Photo enregistrée avec succès !");
+        resultat.put("photoUrl", etudiant.getPhotoUrl());
+
+        return ResponseEntity.ok(resultat);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+
+        return ResponseEntity.status(500)
+                .body("Erreur lors de l'enregistrement de la photo : "
+                        + e.getMessage());
+    }
+}
+}
+
+################################################################
+## FICHIER : .\backend-diar\pom.xml
+################################################################
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.9</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.diar</groupId>
+    <artifactId>backend-diar</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>backend-diar</name>
+    <description>Backend for DIAR Android App</description>
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+    <dependencies>
+        <!-- JPA pour la gestion de la base de données -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Spring Web pour créer les contrôleurs REST -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Driver PostgreSQL pour se connecter à votre base de données -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Dépendance de test standard -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.tess4j</groupId>
+            <artifactId>tess4j</artifactId>
+            <version>5.8.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

@@ -123,7 +123,7 @@ public class Interfaceprofilecoloc extends AppCompatActivity {
         executor.execute(() -> {
             try {
                 // URL de votre endpoint Spring Boot
-                URL url = new URL("http://192.168.1.132:8082/api/etudiants/profil-colocataire");
+                URL url = new URL(Config.BASE_URL + "/api/etudiants/profil-colocataire");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json; utf-8");

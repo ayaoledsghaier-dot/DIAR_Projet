@@ -1,3 +1,67 @@
 <resources>
     <string name="app_name">DIAR</string>
+    <!-- Université = Université de Sousse, Monastir... -->
+    <string-array name="liste_universites">
+        <item>Université de Sousse</item>
+        <item>Université de Monastir</item>
+        <item>Université de Tunis El Manar</item>
+        <item>Université de Sfax</item>
+        <item>Université de Manouba</item>
+        <item>Université de Carthage</item>
+    </string-array>
+
+    <!-- Facs de Sousse -->
+    <string-array name="fac_sousse">
+        <item>ISG Sousse - Institut Supérieur de Gestion</item>
+        <item>FSEG Sousse - Faculté des Sciences Économiques et de Gestion</item>
+        <item>ISSAT Sousse - Institut Supérieur des Sciences Appliquées</item>
+        <item>ENISO - École Nationale d\'Ingénieurs de Sousse</item>
+        <item>Faculté de Médecine de Sousse</item>
+        <item>Faculté de Droit et des Sciences Politiques de Sousse</item>
+        <item>ISITCom Hammam Sousse</item>
+        <item>IHEC Sousse</item>
+    </string-array>
+    <string-array name="fac_monastir">
+        <item>Faculté de Médecine de Monastir</item>
+        <item>FSEG Monastir</item>
+        <item>ISIM Monastir - Institut Supérieur d\'Informatique</item>
+        <item>Faculté de Pharmacie de Monastir</item>
+        <item>ENIM - École Nationale d\'Ingénieurs de Monastir</item>
+    </string-array>
+    <string-array name="fac_tunis_manar">
+        <item>FST - Faculté des Sciences de Tunis</item>
+        <item>ENIT - École Nationale d\'Ingénieurs de Tunis</item>
+        <item>FSEG Tunis</item>
+        <item>Faculté de Médecine de Tunis</item>
+    </string-array>
+    <string-array name="fac_sfax">
+        <item>FSEG Sfax</item>
+        <item>ENIS - École Nationale d\'Ingénieurs de Sfax</item>
+        <item>Faculté de Médecine de Sfax</item>
+        <item>ISIMS Sfax</item>
+    </string-array>
+    <string-array name="fac_manouba">
+        <item>ESC Manouba - École Supérieure de Commerce</item>
+        <item>ISAMM - Institut Supérieur des Arts Multimédia</item>
+        <item>ENSI Manouba - École Nationale des Sciences de l\'Informatique</item>
+    </string-array>
+    <string-array name="fac_carthage">
+        <item>ENAC - École Nationale d\'Architecture</item>
+        <item>INSAT - Institut National des Sciences Appliquées</item>
+        <item>IHEC Carthage</item>
+    </string-array>
+
+
+    <string-array name="liste_genres">
+        <item>Femme</item>
+        <item>Homme</item>
+    </string-array>
+
+    <string-array name="liste_niveaux">
+        <item>1ère année Licence</item>
+        <item>2ème année Licence</item>
+        <item>3ème année Licence</item>
+        <item>Master</item>
+        <item>Doctorat</item>
+    </string-array>
 </resources>

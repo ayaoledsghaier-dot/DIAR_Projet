@@ -150,7 +150,7 @@ public class Interfaceverification extends AppCompatActivity {
                 final String[] serverMessage = {""};
 
                 try {
-                    URL url = new URL("http://192.168.1.22:8083/api/etudiants/verifier");
+                    URL url = new URL(Config.BASE_URL + "/api/etudiants/verifier");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setDoOutput(true);
@@ -208,9 +208,8 @@ public class Interfaceverification extends AppCompatActivity {
 
                         // Délai personnalisé de 2,5 secondes (2500 ms) avant redirection
                         handler.postDelayed(() -> {
-                            Intent intent = new Intent(Interfaceverification.this, Interface6.class);
-                            // Si vous avez besoin de passer l'email ou d'autres données à l'interface 6 :
-                            // intent.putExtra("USER_EMAIL", userEmail);
+                            Intent intent = new Intent(Interfaceverification.this, Interfaceprofilecoloc.class);
+                            intent.putExtra("USER_EMAIL", userEmail);
                             startActivity(intent);
                             finish(); // Ferme l'activité actuelle pour ne pas y revenir en faisant "Retour"
                         }, 2500);

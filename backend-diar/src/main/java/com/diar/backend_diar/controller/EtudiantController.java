@@ -38,27 +38,38 @@ public class EtudiantController {
         this.etudiantRepository = etudiantRepository;
     }
 
-    // 1. Inscription initiale (Création de l'étudiant avec nom, email et mot de
-    // passe)
-    @PostMapping
-    public ResponseEntity<?> creerEtudiant(@RequestBody Etudiant etudiant) {
+    // 1. Inscription initiale - CORRIGÉE
+    @PostMapping({ "", "/register" })
+    public ResponseEntity<?> creerEtudiant(@RequestBody Map<String, String> body) {
         try {
-            if (etudiant == null || etudiant.getEmail() == null || etudiant.getEmail().trim().isEmpty()) {
+            String nomComplet = body.get("nomComplet");
+            if (nomComplet == null)
+                nomComplet = body.get("nom"); // compatibilité avec ton Android actuel
+            String email = body.get("email");
+            String motDePasse = body.get("motDePasse");
+            if (motDePasse == null)
+                motDePasse = body.get("password"); // compatibilité
+
+            if (email == null || email.trim().isEmpty()) {
                 return ResponseEntity.status(400).body("L'e-mail est obligatoire !");
             }
+            if (nomComplet == null || nomComplet.trim().isEmpty()) {
+                return ResponseEntity.status(400).body("Le nom complet est obligatoire !");
+            }
+            if (motDePasse == null || motDePasse.length() < 6) {
+                return ResponseEntity.status(400).body("Mot de passe trop court !");
+            }
 
-            String emailClean = etudiant.getEmail().trim();
+            String emailClean = email.trim().toLowerCase(); // IMPORTANT : comme dans ta méthode connexion
             if (etudiantRepository.existsByEmail(emailClean)) {
                 return ResponseEntity.status(409).body("Ce compte existe déjà !");
             }
 
+            Etudiant etudiant = new Etudiant();
+            etudiant.setNomComplet(nomComplet.trim());
             etudiant.setEmail(emailClean);
-
-            // Sécurité anti-crash : Initialisation des valeurs par défaut pour éviter les
-            // erreurs de contrainte en BDD
-            if (etudiant.getStatutVerification() == null) {
-                etudiant.setStatutVerification("NON_VERIFIE");
-            }
+            etudiant.setMotDePasse(motDePasse); // attention : en clair pour l'instant, comme ton code connexion
+            etudiant.setStatutVerification("NON_VERIFIE");
             etudiant.setBudgetMax(0.0);
 
             Etudiant nouvelEtudiant = etudiantRepository.save(etudiant);
@@ -66,7 +77,7 @@ public class EtudiantController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Erreur serveur lors de la création : " + e.getMessage());
+            return ResponseEntity.status(500).body("Erreur serveur : " + e.getMessage());
         }
     }
 
@@ -99,35 +110,30 @@ public class EtudiantController {
             @RequestParam("genre") String genre,
             @RequestParam("universite") String universite,
             @RequestParam("niveau") String niveau,
-            @RequestParam(value = "photo", required = false) MultipartFile photo) {
+            @RequestParam(value = "age", required = false) Integer age) {
 
         try {
-            if (email != null)
-                email = email.trim();
-            Etudiant etudiant = etudiantRepository.findByEmail(email);
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.status(400).body("Email obligatoire !");
+            }
+            // IMPORTANT : lowercase comme à l'inscription et à la connexion
+            String emailClean = email.trim().toLowerCase();
+            Etudiant etudiant = etudiantRepository.findByEmail(emailClean);
+
+            // NE JAMAIS prendre le premier étudiant, sinon photo sur le mauvais compte
             if (etudiant == null) {
-                List<Etudiant> tous = etudiantRepository.findAll();
-                if (!tous.isEmpty()) {
-                    etudiant = tous.get(0);
-                } else {
-                    return ResponseEntity.status(404).body("Étudiant introuvable pour l'email : " + email);
-                }
+                return ResponseEntity.status(404).body("Étudiant introuvable pour l'email : " + emailClean);
             }
 
             etudiant.setGenre(genre);
             etudiant.setUniversite(universite);
             etudiant.setNiveau(niveau);
-
-            if (photo != null && !photo.isEmpty()) {
-                String fileName = System.currentTimeMillis() + "_" + photo.getOriginalFilename();
-                Path path = Paths.get("uploads/" + fileName);
-                Files.createDirectories(path.getParent());
-                Files.write(path, photo.getBytes());
-                etudiant.setPhotoUrl(fileName);
+            if (age != null) {
+                etudiant.setAge(age); // vérifie que ton entité Etudiant a bien un champ age
             }
 
-            Etudiant etudiantMisAJour = etudiantRepository.save(etudiant);
-            return ResponseEntity.ok(etudiantMisAJour);
+            Etudiant saved = etudiantRepository.save(etudiant);
+            return ResponseEntity.ok(saved);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -340,7 +346,7 @@ public class EtudiantController {
             }
 
             if (etudiant == null) {
-                System.out.println("⚠️ Email introuvable ou vide, utilisation du premier étudiant en BDD par défaut.");
+                System.out.println("⚠ Email introuvable ou vide, utilisation du premier étudiant en BDD par défaut.");
                 List<Etudiant> tousLesEtudiants = etudiantRepository.findAll();
                 if (!tousLesEtudiants.isEmpty()) {
                     etudiant = tousLesEtudiants.get(0);
@@ -419,7 +425,11 @@ public class EtudiantController {
     public ResponseEntity<List<EtudiantAvecScore>> obtenirProfilsCompatibles(@RequestParam("email") String email) {
         System.out.println(">>> Email reçu depuis Android : [" + email + "]");
         try {
-            Etudiant etudiantConnecte = etudiantRepository.findByEmail(email);
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.status(400).body(null);
+            }
+            String emailClean = email.trim().toLowerCase();
+            Etudiant etudiantConnecte = etudiantRepository.findByEmail(emailClean);
             if (etudiantConnecte == null) {
                 return ResponseEntity.status(404).body(null);
             }
@@ -427,60 +437,104 @@ public class EtudiantController {
             List<Etudiant> tousLesEtudiants = etudiantRepository.findAll();
             List<EtudiantAvecScore> resultats = new ArrayList<>();
 
-            String genreConnecte = etudiantConnecte.getGenre(); // "Femme" ou "Homme"
+            String genreConnecte = etudiantConnecte.getGenre();
 
+            // ✅ CORRIGÉ : UNE SEULE BOUCLE (avant tu en avais 2 imbriquées)
             for (Etudiant autre : tousLesEtudiants) {
                 // 1. Ne pas se comparer soi-même
-                if (autre.getEmail() != null && autre.getEmail().equalsIgnoreCase(email)) {
+                if (autre.getEmail() != null && autre.getEmail().equalsIgnoreCase(emailClean)) {
                     continue;
                 }
 
-                // 2. FILTRE STRICT PAR GENRE : Si l'étudiant connecté est une femme, afficher
-                // uniquement les femmes (et vice-versa)
-                if (genreConnecte != null && !genreConnecte.equalsIgnoreCase(autre.getGenre())) {
-                    continue; // Ignore ce profil s'il ne respecte pas la règle de genre
+                // 2. GENRE : FILTRE STRICT + POINTS
+                if (genreConnecte != null && !genreConnecte.trim().isEmpty()
+                        && !genreConnecte.equalsIgnoreCase(autre.getGenre())) {
+                    continue;
                 }
 
-                int score = 20; // Score de base minimum
-
-                // 3. Université identique (+25 points)
-                if (etudiantConnecte.getUniversite() != null &&
-                        etudiantConnecte.getUniversite().equalsIgnoreCase(autre.getUniversite())) {
-                    score += 25;
+                // 3. FILTRE COLOCATION : que ceux qui veulent la coloc
+                if (autre.getLocationType() != null && !autre.getLocationType().trim().isEmpty()
+                        && !autre.getLocationType().equalsIgnoreCase("Colocation")) {
+                    continue;
                 }
 
-                // 4. Quartier identique (+20 points)
-                if (etudiantConnecte.getQuartier() != null &&
-                        etudiantConnecte.getQuartier().equalsIgnoreCase(autre.getQuartier())) {
+                // 4. FILTRE PROFIL INCOMPLET
+                if (autre.getQuartier() == null || autre.getQuartier().trim().isEmpty()) {
+                    continue;
+                }
+
+                int score = 0;
+
+                // --- GENRE : +10 ---
+                if (equalsIgnore(etudiantConnecte.getGenre(), autre.getGenre())) {
+                    score += 10;
+                }
+
+                // --- QUARTIER : +20 ---
+                if (equalsIgnore(etudiantConnecte.getQuartier(), autre.getQuartier())) {
                     score += 20;
                 }
 
-                // 5. Type de logement identique (+15 points)
-                if (etudiantConnecte.getTypeLogement() != null &&
-                        etudiantConnecte.getTypeLogement().equalsIgnoreCase(autre.getTypeLogement())) {
+                // --- BUDGET : +15 si écart <= 50, +8 si écart <= 100 ---
+                double diffBudget = Math.abs(autre.getBudgetMax() - etudiantConnecte.getBudgetMax());
+                if (diffBudget <= 50) {
                     score += 15;
+                } else if (diffBudget <= 100) {
+                    score += 8;
                 }
 
-                // 6. Budget max proche (écart de 50 DT max -> +10 points)
-                if (Math.abs(autre.getBudgetMax() - etudiantConnecte.getBudgetMax()) <= 50) {
+                // --- TYPE LOGEMENT : +10 ---
+                if (equalsIgnore(etudiantConnecte.getTypeLogement(), autre.getTypeLogement())) {
                     score += 10;
                 }
 
-                // 7. Propreté (+10 points)
-                if (etudiantConnecte.getProprete() != null &&
-                        etudiantConnecte.getProprete().equalsIgnoreCase(autre.getProprete())) {
+                // --- ÂGE : +10 si écart <= 2 ans, +5 si écart <= 4 ans ---
+                if (etudiantConnecte.getAge() != null && autre.getAge() != null) {
+                    int diffAge = Math.abs(autre.getAge() - etudiantConnecte.getAge());
+                    if (diffAge <= 2) {
+                        score += 10;
+                    } else if (diffAge <= 4) {
+                        score += 5;
+                    }
+                }
+
+                // --- MODE DE VIE : +10 (Profil Coloc) ---
+                if (equalsIgnore(etudiantConnecte.getModeDeVie(), autre.getModeDeVie())) {
                     score += 10;
                 }
 
-                // Plafonner le score à 100%
+                // --- UNIVERSITÉ : +5 ---
+                if (equalsIgnore(etudiantConnecte.getUniversite(), autre.getUniversite())) {
+                    score += 5;
+                }
+
+                // --- ÉQUIPEMENTS : +5 au prorata ---
+                score += calculEquipements(etudiantConnecte.getEquipements(), autre.getEquipements(), 5);
+
+                // --- PROPRETÉ : +5 ---
+                if (equalsIgnore(etudiantConnecte.getProprete(), autre.getProprete())) {
+                    score += 5;
+                }
+
+                // --- ANIMAUX : +5 ---
+                if (equalsIgnore(etudiantConnecte.getAnimauxAcceptes(), autre.getAnimauxAcceptes())) {
+                    score += 5;
+                }
+
+                // --- NB COLOCATAIRES : +5 ---
+                if (equalsIgnore(etudiantConnecte.getNbColocataires(), autre.getNbColocataires())) {
+                    score += 5;
+                }
+
+                // Plafonner à 100
                 if (score > 100)
                     score = 100;
 
-                // Ajouter le résultat dans la liste
+                // ✅ CORRIGÉ : UN SEUL add (avant tu en avais 2)
                 resultats.add(new EtudiantAvecScore(autre, score));
             }
 
-            // Trier par pourcentage décroissant (du plus compatible au moins compatible)
+            // Trier du plus compatible au moins compatible
             resultats.sort((a, b) -> Integer.compare(b.getPourcentage(), a.getPourcentage()));
 
             return ResponseEntity.ok(resultats);
@@ -489,77 +543,152 @@ public class EtudiantController {
             return ResponseEntity.status(500).body(null);
         }
     }
+
+    // --- Méthodes utilitaires ---
+
+    private boolean equalsIgnore(String a, String b) {
+        if (a == null || b == null)
+            return false;
+        a = a.trim();
+        b = b.trim();
+        if (a.isEmpty() || b.isEmpty())
+            return false;
+        return a.equalsIgnoreCase(b);
+    }
+
+    // ✅ CORRIGÉ : ajout du paramètre maxPoints (avant la méthode prenait 2 params mais tu l'appelais avec 3)
+    private int calculEquipements(String equipementsMoi, String equipementsAutre, int maxPoints) {
+        if (equipementsMoi == null || equipementsAutre == null)
+            return 0;
+        equipementsMoi = equipementsMoi.trim();
+        equipementsAutre = equipementsAutre.trim();
+        if (equipementsMoi.isEmpty() || equipementsAutre.isEmpty())
+            return 0;
+
+        // On découpe "Wi-Fi, Climatisation" -> ["Wi-Fi", "Climatisation"]
+        String[] mesEquipements = equipementsMoi.split(",");
+        String[] sesEquipements = equipementsAutre.split(",");
+
+        int enCommun = 0;
+        for (String monEq : mesEquipements) {
+            monEq = monEq.trim();
+            if (monEq.isEmpty())
+                continue;
+            for (String sonEq : sesEquipements) {
+                if (monEq.equalsIgnoreCase(sonEq.trim())) {
+                    enCommun++;
+                    break;
+                }
+            }
+        }
+
+        if (enCommun == 0)
+            return 0;
+        // Proportion : si tu as 2 équipements et vous avez 2 en commun -> maxPoints
+        // Si tu as 4 et vous avez 2 en commun -> la moitié de maxPoints
+        double ratio = (double) enCommun / mesEquipements.length;
+        return (int) Math.round(ratio * maxPoints);
+    }
+
     // 7. Enregistrement de la photo de profil lors de l'inscription
-@PostMapping(value = "/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-public ResponseEntity<?> enregistrerPhotoInscription(
-        @RequestParam("email") String email,
-        @RequestParam("photo") MultipartFile photo) {
+    @PostMapping(value = "/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> enregistrerPhotoInscription(
+            @RequestParam("email") String email,
+            @RequestParam("photo") MultipartFile photo) {
+        try {
+            if (email == null || email.trim().isEmpty())
+                return ResponseEntity.badRequest().body("Email obligatoire !");
+            if (photo == null || photo.isEmpty())
+                return ResponseEntity.badRequest().body("Photo obligatoire !");
 
-    try {
-        if (email == null || email.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Email obligatoire !");
+            String emailClean = email.trim().toLowerCase();
+            Etudiant etudiant = etudiantRepository.findByEmail(emailClean);
+            if (etudiant == null)
+                return ResponseEntity.status(404).body("Étudiant introuvable !");
+
+            // On accepte tout ce qui commence par image/
+            String contentType = photo.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body("Format non accepté !");
+            }
+            String extension = ".jpg";
+            if (contentType.contains("png"))
+                extension = ".png";
+            else if (contentType.contains("webp"))
+                extension = ".webp";
+
+            Path dossier = Paths.get("uploads", "etudiants");
+            Files.createDirectories(dossier);
+            String nomFichier = UUID.randomUUID().toString() + extension;
+            Path destination = dossier.resolve(nomFichier);
+            Files.copy(photo.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+
+            // TOUJOURS le même format : /uploads/etudiants/xxx.jpg
+            etudiant.setPhotoUrl("/uploads/etudiants/" + nomFichier);
+            etudiantRepository.save(etudiant);
+
+            Map<String, String> resultat = new HashMap<>();
+            resultat.put("message", "Photo enregistrée !");
+            resultat.put("photoUrl", etudiant.getPhotoUrl());
+            return ResponseEntity.ok(resultat);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur photo : " + e.getMessage());
         }
+    }
 
-        if (photo == null || photo.isEmpty()) {
-            return ResponseEntity.badRequest().body("Photo obligatoire !");
-        }
+    // ==========================================
+    // CONNEXION ETUDIANT
+    // ==========================================
+    @PostMapping("/connexion")
+    public ResponseEntity<?> connecter(@RequestBody Map<String, String> donnees) {
 
-        if (photo.getSize() > 5 * 1024 * 1024) {
+        String email = donnees.get("email");
+        String motDePasse = donnees.get("motDePasse");
+
+        if (email == null || email.trim().isEmpty()
+                || motDePasse == null || motDePasse.isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body("Photo trop volumineuse (5 MB maximum).");
+                    .body(Map.of("message", "Email et mot de passe obligatoires."));
         }
 
-        String contentType = photo.getContentType();
-        String extension;
-
-        if ("image/jpeg".equals(contentType)) {
-            extension = ".jpg";
-        } else if ("image/png".equals(contentType)) {
-            extension = ".png";
-        } else if ("image/webp".equals(contentType)) {
-            extension = ".webp";
-        } else {
-            return ResponseEntity.badRequest()
-                    .body("Format photo non accepté !");
-        }
-
-        String emailClean = email.trim();
+        // L'app enregistre les emails en minuscules a l'inscription
+        String emailClean = email.trim().toLowerCase();
 
         Etudiant etudiant = etudiantRepository.findByEmail(emailClean);
 
-        if (etudiant == null) {
-            return ResponseEntity.status(404)
-                    .body("Étudiant introuvable !");
+        if (etudiant == null || !motDePasse.equals(etudiant.getMotDePasse())) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("message", "Email ou mot de passe incorrect."));
         }
 
-        Path dossier = Paths.get("uploads", "etudiants");
-        Files.createDirectories(dossier);
-
-        String nomFichier = UUID.randomUUID().toString() + extension;
-
-        Path destination = dossier.resolve(nomFichier);
-
-        try (java.io.InputStream input = photo.getInputStream()) {
-            Files.copy(input, destination,
-                    StandardCopyOption.REPLACE_EXISTING);
+        // Prochaine etape de l'inscription a reprendre (ou ACCUEIL si tout est fait)
+        String etape;
+        if (estVide(etudiant.getGenre()) || estVide(etudiant.getUniversite())
+                || estVide(etudiant.getNiveau())) {
+            etape = "PROFIL";
+        } else if (estVide(etudiant.getTypeLogement())) {
+            etape = "PREFERENCES";
+        } else if (!"VERIFIE".equals(etudiant.getStatutVerification())) {
+            etape = "VERIFICATION";
+        } else if (estVide(etudiant.getModeDeVie())) {
+            etape = "PROFIL_COLOC";
+        } else {
+            etape = "ACCUEIL";
         }
 
-        etudiant.setPhotoUrl("/uploads/etudiants/" + nomFichier);
+        // HashMap (et pas Map.of) car nomComplet peut etre null
+        Map<String, Object> reponse = new HashMap<>();
+        reponse.put("message", "Connexion r\u00e9ussie");
+        reponse.put("role", "ETUDIANT");
+        reponse.put("nom", etudiant.getNomComplet() != null ? etudiant.getNomComplet() : "");
+        reponse.put("email", etudiant.getEmail());
+        reponse.put("etape", etape);
 
-        etudiantRepository.save(etudiant);
-
-        Map<String, String> resultat = new HashMap<>();
-        resultat.put("message", "Photo enregistrée avec succès !");
-        resultat.put("photoUrl", etudiant.getPhotoUrl());
-
-        return ResponseEntity.ok(resultat);
-
-    } catch (Exception e) {
-        e.printStackTrace();
-
-        return ResponseEntity.status(500)
-                .body("Erreur lors de l'enregistrement de la photo : "
-                        + e.getMessage());
+        return ResponseEntity.ok(reponse);
     }
-}
+
+    private static boolean estVide(String s) {
+        return s == null || s.trim().isEmpty();
+    }
 }

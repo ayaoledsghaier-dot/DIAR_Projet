@@ -1,40 +1,35 @@
-
 package com.example.diar;
 
 import android.content.Intent;
-import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.util.Patterns;
-import android.widget.EditText;
-import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Interfacecreercompteetudiant extends AppCompatActivity {
 
-    private EditText etNomComplet, etEmail, etPassword, etConfirmPassword;
-    private MaterialButton btnCreerCompte;
-    private ImageView imageView;
-
-    private Uri selectedImageUri;
-    private ActivityResultLauncher<String> galleryLauncher;
+    private TextInputEditText etFullName;
+    private NonAutofillEditText etEmail; // <-- ON GARDE TA CLASSE ICI
+    private TextInputEditText etPassword, etConfirmPassword;
+    private MaterialButton btnSubmit;
+    private ImageButton btnBack;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -44,340 +39,159 @@ public class Interfacecreercompteetudiant extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.interface_creer_compte_etudiant);
 
-        // Association des composants
-        etNomComplet = findViewById(R.id.etFullName);
+        // Liaison XML
+        etFullName = findViewById(R.id.etFullName);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
-        btnCreerCompte = findViewById(R.id.btnSubmit);
-        imageView = findViewById(R.id.imageView);
+        btnSubmit = findViewById(R.id.btnSubmit);
+        btnBack = findViewById(R.id.btnBack);
 
-        // Ouvrir la galerie
-        galleryLauncher = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
-                uri -> {
-                    if (uri != null) {
-                        selectedImageUri = uri;
-                        imageView.setImageURI(uri);
-                        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                    }
-                }
-        );
+        btnBack.setOnClickListener(v -> finish());
 
-        // Cliquer sur l'image pour choisir une photo
-        imageView.setOnClickListener(v ->
-                galleryLauncher.launch("image/*")
-        );
-
-        // Bouton retour
-        ImageView btnBack = findViewById(R.id.btnBack);
-        // Le bouton retour est un ImageButton dans le XML
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
-
-        btnCreerCompte.setOnClickListener(v -> validerInscription());
+        btnSubmit.setOnClickListener(v -> verifierEtEnregistrer());
     }
 
-    private void validerInscription() {
+    private void verifierEtEnregistrer() {
+        String fullName = etFullName.getText() != null ? etFullName.getText().toString().trim() : "";
+        String email = etEmail.getText() != null ? etEmail.getText().toString().trim().toLowerCase() : "";
+        String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
+        String confirmPassword = etConfirmPassword.getText() != null ? etConfirmPassword.getText().toString().trim() : "";
 
-        String nom = etNomComplet.getText().toString().trim();
-        String email = etEmail.getText().toString().trim();
-        String password = etPassword.getText().toString().trim();
-        String confirmPassword = etConfirmPassword.getText().toString().trim();
-
-        resetFieldColors();
-
-        // 1. Champs vides
-        if (nom.isEmpty() && email.isEmpty() &&
-                password.isEmpty() && confirmPassword.isEmpty()) {
-
-            Toast.makeText(this, "Veuillez remplir tous les champs",
-                    Toast.LENGTH_SHORT).show();
-
-            setFieldError(etNomComplet);
-            setFieldError(etEmail);
-            setFieldError(etPassword);
-            setFieldError(etConfirmPassword);
+        // --- Contrôles de saisie ---
+        if (fullName.isEmpty()) {
+            etFullName.setError("Veuillez entrer votre nom complet");
+            etFullName.requestFocus();
             return;
         }
 
-        // 2. Nom complet
-        if (nom.isEmpty()) {
-            Toast.makeText(this, "Veuillez entrer votre nom complet",
-                    Toast.LENGTH_SHORT).show();
-            setFieldError(etNomComplet);
-            etNomComplet.requestFocus();
-            return;
-        }
-
-        int espaceCount = 0;
-
-        for (int i = 0; i < nom.length(); i++) {
-            char c = nom.charAt(i);
-
-            if (c == ' ') {
-                espaceCount++;
-            } else if (!Character.isLetter(c)) {
-                Toast.makeText(this,
-                        "Le nom doit contenir uniquement des lettres",
-                        Toast.LENGTH_LONG).show();
-                setFieldError(etNomComplet);
-                etNomComplet.requestFocus();
-                return;
-            }
-        }
-
-        if (espaceCount < 1 || espaceCount > 2) {
-            Toast.makeText(this,
-                    "Format incorrect ! (1 ou 2 espaces autorisés)",
-                    Toast.LENGTH_LONG).show();
-            setFieldError(etNomComplet);
-            etNomComplet.requestFocus();
-            return;
-        }
-
-        setFieldSuccess(etNomComplet);
-
-        // 3. Email
-        if (email.isEmpty()) {
-            Toast.makeText(this, "Veuillez entrer votre e-mail",
-                    Toast.LENGTH_SHORT).show();
-            setFieldError(etEmail);
+        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            etEmail.setError("Veuillez entrer une adresse e-mail valide");
             etEmail.requestFocus();
             return;
         }
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this,
-                    "Format d'e-mail invalide",
-                    Toast.LENGTH_LONG).show();
-            setFieldError(etEmail);
-            etEmail.requestFocus();
-            return;
-        }
-
-        setFieldSuccess(etEmail);
-
-        // 4. Mot de passe
-        if (password.isEmpty()) {
-            Toast.makeText(this, "Veuillez entrer votre mot de passe",
-                    Toast.LENGTH_SHORT).show();
-            setFieldError(etPassword);
+        if (password.isEmpty() || password.length() < 6) {
+            etPassword.setError("Le mot de passe doit contenir au moins 6 caractères");
             etPassword.requestFocus();
-            return;
-        }
-
-        if (password.length() < 6) {
-            Toast.makeText(this,
-                    "Le mot de passe doit contenir au moins 6 caractères",
-                    Toast.LENGTH_LONG).show();
-            setFieldError(etPassword);
-            etPassword.requestFocus();
-            return;
-        }
-
-        int chiffreCount = 0;
-
-        for (int i = 0; i < password.length(); i++) {
-            if (Character.isDigit(password.charAt(i))) {
-                chiffreCount++;
-            }
-        }
-
-        if (chiffreCount < 3) {
-            Toast.makeText(this,
-                    "Le mot de passe doit contenir au moins 3 chiffres",
-                    Toast.LENGTH_LONG).show();
-            setFieldError(etPassword);
-            etPassword.requestFocus();
-            return;
-        }
-
-        setFieldSuccess(etPassword);
-
-        // 5. Confirmation
-        if (confirmPassword.isEmpty()) {
-            Toast.makeText(this,
-                    "Veuillez confirmer votre mot de passe",
-                    Toast.LENGTH_SHORT).show();
-            setFieldError(etConfirmPassword);
-            etConfirmPassword.requestFocus();
             return;
         }
 
         if (!password.equals(confirmPassword)) {
-            Toast.makeText(this,
-                    "Les mots de passe ne correspondent pas",
-                    Toast.LENGTH_LONG).show();
-            setFieldError(etConfirmPassword);
+            etConfirmPassword.setError("Les mots de passe ne correspondent pas");
             etConfirmPassword.requestFocus();
             return;
         }
 
-        setFieldSuccess(etConfirmPassword);
-
-        // 6. Photo de profil
-        if (selectedImageUri == null) {
-            Toast.makeText(this,
-                    "Veuillez choisir une photo de profil",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        // 7. Appel API
-        btnCreerCompte.setEnabled(false);
-
-        String emailClean = email.toLowerCase();
+        btnSubmit.setEnabled(false);
+        btnSubmit.setText("Création en cours...");
 
         executor.execute(() -> {
-
-            boolean isSuccess = false;
-            String serverMessage = "";
-
             HttpURLConnection conn = null;
-
             try {
-                URL url = new URL("http://192.168.1.22:8083/api/etudiants");
-
-
+                // URL Backend : POST /api/etudiants
+                URL url = new URL(Config.BASE_URL + "/api/etudiants");
                 conn = (HttpURLConnection) url.openConnection();
-
                 conn.setRequestMethod("POST");
-                conn.setRequestProperty(
-                        "Content-Type", "application/json; charset=UTF-8"
-                );
-                conn.setRequestProperty("Accept", "application/json");
+                conn.setDoOutput(true);
                 conn.setConnectTimeout(15000);
                 conn.setReadTimeout(15000);
-                conn.setDoOutput(true);
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                conn.setRequestProperty("Accept", "application/json");
 
-                String jsonInputString =
-                        "{\"nomComplet\":\"" + nom +
-                                "\",\"email\":\"" + emailClean +
-                                "\",\"motDePasse\":\"" + password + "\"}";
+                // JSON avec les NOMS EXACTS attendus par le Backend
+                String json = "{"
+                        + "\"nomComplet\":\"" + escapeJson(fullName) + "\","
+                        + "\"email\":\"" + escapeJson(email) + "\","
+                        + "\"motDePasse\":\"" + escapeJson(password) + "\""
+                        + "}";
 
-                byte[] input = jsonInputString.getBytes("UTF-8");
-
-                conn.setFixedLengthStreamingMode(input.length);
+                Log.d("Inscription", "JSON envoyé : " + json);
+                Log.d("Inscription", "URL : " + url.toString());
 
                 try (OutputStream os = conn.getOutputStream()) {
-                    os.write(input);
+                    os.write(json.getBytes(StandardCharsets.UTF_8));
                     os.flush();
                 }
 
                 int responseCode = conn.getResponseCode();
+                InputStream responseStream = (responseCode >= 200 && responseCode < 300)
+                        ? conn.getInputStream()
+                        : conn.getErrorStream();
 
-                BufferedReader br;
-
-                if (responseCode >= 200 && responseCode < 300) {
-                    isSuccess = true;
-                    br = new BufferedReader(
-                            new InputStreamReader(conn.getInputStream(), "UTF-8")
-                    );
-                } else {
-                    br = new BufferedReader(
-                            new InputStreamReader(conn.getErrorStream(), "UTF-8")
-                    );
-                }
-
-                if (br != null) {
-                    StringBuilder response = new StringBuilder();
-                    String line;
-
-                    while ((line = br.readLine()) != null) {
-                        response.append(line);
+                StringBuilder response = new StringBuilder();
+                if (responseStream != null) {
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(responseStream, StandardCharsets.UTF_8))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
+                        }
                     }
-
-                    serverMessage = response.toString();
-                    br.close();
                 }
 
-                Log.d("InscriptionEtudiant",
-                        "Code: " + responseCode + " | " + serverMessage);
+                String serverMessage = response.toString();
+                boolean success = responseCode >= 200 && responseCode < 300;
+
+                Log.d("Inscription", "Code : " + responseCode + " Réponse : " + serverMessage);
+
+                handler.post(() -> {
+                    btnSubmit.setEnabled(true);
+                    btnSubmit.setText("Suivant");
+
+                    if (success) {
+                        // 🆕 C'EST LA LIGNE QUI MANQUAIT - Sinon Interface5 perd l'email
+                        SessionManager sessionManager = new SessionManager(Interfacecreercompteetudiant.this);
+                        sessionManager.sauvegarderSession(email, fullName);
+
+                        Toast.makeText(Interfacecreercompteetudiant.this,
+                                "Compte créé avec succès !", Toast.LENGTH_LONG).show();
+
+                        Intent intent = new Intent(Interfacecreercompteetudiant.this, Interface5.class);
+                        intent.putExtra("USER_EMAIL", email);
+                        intent.putExtra("USER_NAME", fullName);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        if (responseCode == 409) {
+                            etEmail.setError("Ce compte existe déjà !");
+                            Toast.makeText(Interfacecreercompteetudiant.this,
+                                    "Ce compte existe déjà ! Essayez de vous connecter.",
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(Interfacecreercompteetudiant.this,
+                                    "Erreur (" + responseCode + ") : " + serverMessage,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
 
             } catch (Exception e) {
-                Log.e("InscriptionEtudiant", "Erreur API", e);
-                serverMessage = e.getMessage() != null
-                        ? e.getMessage() : "Erreur de connexion";
+                Log.e("Inscription", "Erreur connexion", e);
+                handler.post(() -> {
+                    btnSubmit.setEnabled(true);
+                    btnSubmit.setText("Suivant");
+                    Toast.makeText(Interfacecreercompteetudiant.this,
+                            "Impossible de contacter le serveur : " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
             } finally {
                 if (conn != null) {
                     conn.disconnect();
                 }
             }
-
-            final boolean success = isSuccess;
-            final String message = serverMessage;
-
-            handler.post(() -> {
-
-                btnCreerCompte.setEnabled(true);
-
-                if (success) {
-
-                    SessionManager sessionManager = new SessionManager(this);
-                    sessionManager.sauvegarderSession(emailClean, nom);
-
-                    Toast.makeText(this,
-                            "Compte créé avec succès !",
-                            Toast.LENGTH_LONG).show();
-
-                    handler.postDelayed(() -> {
-
-                        Intent intent = new Intent(
-                                Interfacecreercompteetudiant.this,
-                                Interface5.class
-                        );
-
-                        intent.putExtra("USER_EMAIL", emailClean);
-                        intent.putExtra("USER_NAME", nom);
-
-                        startActivity(intent);
-                        finish();
-
-                    }, 2500);
-
-                } else {
-
-                    Toast.makeText(this,
-                            "Erreur : " + message,
-                            Toast.LENGTH_LONG).show();
-                }
-            });
         });
     }
 
-    // Couleur rouge en cas d'erreur
-    private void setFieldError(EditText editText) {
-        if (editText != null) {
-            editText.setBackgroundColor(Color.parseColor("#FFCDD2"));
-        }
-    }
-
-    // Couleur verte en cas de succès
-    private void setFieldSuccess(EditText editText) {
-        if (editText != null) {
-            editText.setBackgroundColor(Color.parseColor("#C8E6C9"));
-        }
-    }
-
-    // Réinitialisation des couleurs
-    private void resetFieldColors() {
-        setNeutralField(etNomComplet);
-        setNeutralField(etEmail);
-        setNeutralField(etPassword);
-        setNeutralField(etConfirmPassword);
-    }
-
-    private void setNeutralField(EditText editText) {
-        if (editText != null) {
-            editText.setBackgroundColor(Color.TRANSPARENT);
-        }
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         executor.shutdown();
+        handler.removeCallbacksAndMessages(null);
     }
 }

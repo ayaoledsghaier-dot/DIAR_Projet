@@ -40,23 +40,6 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Partie image (cercle) -->
-
-        <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="110dp"
-            android:layout_height="110dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="24dp"
-            android:src="@drawable/icon_camera_profil"
-            android:scaleType="centerCrop"
-            android:background="@drawable/icon_camera_profil"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Choisir une photo de profil" />
-
-
         <!-- Nom complet -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -81,7 +64,7 @@
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Email -->
+        <!-- Email - AVEC TA CLASSE NonAutofillEditText -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
